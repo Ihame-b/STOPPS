@@ -86,14 +86,22 @@ WSGI_APPLICATION = 'ecomproject.wsgi.application'
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 # Use PostgreSQL in production (via DATABASE_URL), SQLite for local development
-import dj_database_url
-
-DATABASES = {
-    'default': dj_database_url.config(
-        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
-        conn_max_age=600
-    )
-}
+try:
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=f'sqlite:///{BASE_DIR / "db.sqlite3"}',
+            conn_max_age=600
+        )
+    }
+except ImportError:
+    # Fallback to SQLite if dj_database_url is not installed (local development)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 # os.path.join(settings.JASMINE_TEST_DIRECTORY, ‘spec’) *
 
 # Password validation
