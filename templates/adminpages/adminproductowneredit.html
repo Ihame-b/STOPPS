@@ -1,0 +1,95 @@
+{% extends 'adminpages/adminbase.html' %}
+{% load static %}
+
+{% block title %}Edit Product Owner - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-admin">
+    <div class="container">
+        <h1 class="mb-2">
+            <i class="fas fa-edit me-2"></i>Edit Product Owner
+        </h1>
+        <p class="mb-0">Update product owner information</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-modern">
+                <div class="card-body p-5">
+                    {% if productowner.image %}
+                    <div class="mb-4 text-center">
+                        <h5 class="mb-3">Current Profile Image</h5>
+                        <img src="{{productowner.image.url}}" alt="{{productowner.full_name}}" 
+                             style="max-width: 150px; max-height: 150px; border-radius: 50%; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" enctype="multipart/form-data" class="form-modern">
+                        {% csrf_token %}
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="full_name" class="form-label">
+                                    <i class="fas fa-id-card me-1"></i>Full Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="full_name" id="full_name" class="form-control" value="{{productowner.full_name}}" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="mobile" class="form-label">
+                                    <i class="fas fa-phone me-1"></i>Mobile <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="mobile" id="mobile" class="form-control" value="{{productowner.mobile}}" required>
+                            </div>
+
+                            <div class="col-md-12">
+                                <label for="image" class="form-label">
+                                    <i class="fas fa-image me-1"></i>Profile Image
+                                </label>
+                                <input type="file" name="image" id="image" class="form-control" accept="image/*">
+                                <small class="text-muted">Leave empty to keep current image</small>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-modern btn-modern-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Update Product Owner
+                            </button>
+                            <a href="{% url 'ecomapp:adminproductownerlist' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-modern input,
+    .form-modern select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+
+    .form-modern input:focus,
+    .form-modern select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}

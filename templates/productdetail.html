@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{product.title}} - STOPPS{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'ecomapp:home' %}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'ecomapp:allproducts' %}">Products</a></li>
+            <li class="breadcrumb-item"><a href="#">{{product.category}}</a></li>
+            <li class="breadcrumb-item active">{{product.title}}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-3 g-md-4">
+        <!-- Product Images -->
+        <div class="col-12 col-md-5">
+            <div class="product-detail-image mb-3">
+                <img src="{{product.image.url}}" alt="{{product.title}}" class="img-fluid w-100">
+            </div>
+            {% if product.productimage_set.all %}
+            <div class="row g-2">
+                {% for pi in product.productimage_set.all %}
+                <div class="col-4 col-sm-3">
+                    <a href="{{pi.image.url}}" target="_blank" class="d-block">
+                        <img src="{{pi.image.url}}" class="img-fluid rounded" style="height: 80px; object-fit: cover; cursor: pointer;" alt="">
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-12 col-md-7">
+            <div class="product-detail-info">
+                <h1 class="mb-2 mb-md-3" style="font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 1.5rem;">{{product.title}}</h1>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <span class="product-detail-badge">
+                        <i class="fas fa-eye me-1"></i>{{product.view_count}} views
+                    </span>
+                    <span class="badge bg-secondary ms-2">
+                        <i class="fas fa-tag me-1"></i>{{product.category}}
+                    </span>
+                </div>
+
+                <div class="product-detail-price">
+                    <span class="text-success">RWF {{product.selling_price}}</span>
+                    {% if product.marked_price > product.selling_price %}
+                    <span class="text-muted text-decoration-line-through ms-3">RWF {{product.marked_price}}</span>
+                    <span class="badge bg-danger ms-2">
+                        Save RWF {{product.marked_price|add:"-"|add:product.selling_price}}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <hr>
+
+                <div class="mb-4">
+                    <h5 class="mb-3"><i class="fas fa-info-circle text-primary me-2"></i>Product Details</h5>
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <strong>Category:</strong>
+                            <p class="text-muted mb-0">{{product.category}}</p>
+                        </div>
+                        {% if product.productowner %}
+                        <div class="col-6">
+                            <strong>Product Owner:</strong>
+                            <p class="text-muted mb-0">{{product.productowner}}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if product.warranty %}
+                <div class="alert alert-info mb-3">
+                    <i class="fas fa-shield-alt me-2"></i>
+                    <strong>Warranty:</strong> {{product.warranty}}
+                </div>
+                {% endif %}
+
+                {% if product.return_policy %}
+                <div class="alert alert-success mb-4">
+                    <i class="fas fa-undo me-2"></i>
+                    <strong>Return Policy:</strong> {{product.return_policy}}
+                </div>
+                {% endif %}
+
+                <div class="d-grid gap-2">
+                    <a href="{% url 'ecomapp:addtocart' product.id %}?next={% url 'ecomapp:productdetail' product.slug %}" class="btn btn-modern btn-modern-primary btn-lg">
+                        <i class="fas fa-shopping-cart me-2"></i>Add to Cart
+                    </a>
+                    <a href="{% url 'ecomapp:mycart' %}" class="btn btn-outline-primary">
+                        <i class="fas fa-shopping-bag me-2"></i>View Cart
+                    </a>
+                    {% if product.productowner and user.is_authenticated %}
+                    <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#chatModal">
+                        <i class="fas fa-comments me-2"></i>Contact Product Owner
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    {% if product.productowner and user.is_authenticated and chat %}
+    <div class="modal fade" id="chatModal" tabindex="-1" aria-labelledby="chatModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable {% if request.user_agent.is_mobile %}modal-fullscreen-sm-down{% else %}modal-lg{% endif %}">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); color: white; padding: 0.75rem 1rem;">
+                    <h6 class="modal-title mb-0" id="chatModalLabel">
+                        <i class="fas fa-comments me-2"></i>Chat with {{product.productowner}}
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="max-height: 60vh; overflow-y: auto; background: #f8f9fa; padding: 1rem;">
+                    <div id="chatMessages">
+                        {% for message in messages %}
+                        <div class="mb-2 {% if message.sender == user %}text-end{% endif %}">
+                            <div class="d-inline-block p-2 rounded {% if message.sender == user %}bg-primary text-white{% else %}bg-white border shadow-sm{% endif %}" style="max-width: 85%;">
+                                <small class="d-block mb-1 {% if message.sender == user %}text-white-50{% else %}text-muted{% endif %}" style="font-size: 0.7rem;">
+                                    {{message.sender.username}} - {{message.created_at|date:"M d, H:i"}}
+                                </small>
+                                <div style="font-size: 0.9rem; word-wrap: break-word;">{{message.message}}</div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-comments fa-2x mb-2"></i>
+                            <p style="font-size: 0.9rem;">No messages yet. Start the conversation!</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 0.75rem;">
+                    <form method="POST" action="{% url 'ecomapp:sendmessage' %}" class="w-100" id="chatForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="chat_id" value="{{chat.id}}">
+                        <div class="input-group">
+                            <input type="text" name="message" class="form-control" placeholder="Type your message..." required style="font-size: 16px;">
+                            <button type="submit" class="btn btn-primary" style="min-width: 60px;">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Product Description -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="card-modern p-4">
+                <h3 class="mb-4">
+                    <i class="fas fa-align-left text-primary me-2"></i>Description
+                </h3>
+                <p style="line-height: 1.8; color: var(--gray-color);">{{product.description}}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,363 @@
+{% extends "adminpages/adminbase.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Admin Dashboard - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-admin">
+    <div class="container">
+        <h1 class="mb-2">
+            <i class="fas fa-user-shield me-2"></i>Admin Dashboard
+        </h1>
+        <p class="mb-0">Manage orders, products, and transport</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-icon warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <h3 class="mb-1">{{pendingorders|length}}</h3>
+                <p class="text-muted mb-0">Pending Orders</p>
+                <a href="{% url 'ecomapp:adminhome' %}" class="btn btn-sm btn-outline-warning mt-2">
+                    View <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-icon primary">
+                    <i class="fas fa-shopping-bag"></i>
+                </div>
+                <h3 class="mb-1">{{total_orders}}</h3>
+                <p class="text-muted mb-0">Total Orders</p>
+                <a href="{% url 'ecomapp:adminorderlist' %}" class="btn btn-sm btn-outline-primary mt-2">
+                    View All <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3 class="mb-1">{{completed_orders}}</h3>
+                <p class="text-muted mb-0">Completed Orders</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-card-icon info">
+                    <i class="fas fa-box"></i>
+                </div>
+                <h3 class="mb-1">{{total_products}}</h3>
+                <p class="text-muted mb-0">Total Products</p>
+                <a href="{% url 'ecomapp:adminproductlist' %}" class="btn btn-sm btn-outline-info mt-2">
+                    Manage <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <h4 class="mb-4">
+                        <i class="fas fa-bolt text-primary me-2"></i>Quick Actions
+                    </h4>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <a href="{% url 'ecomapp:adminproductcreate' %}" class="btn btn-modern btn-modern-primary w-100">
+                                <i class="fas fa-plus-circle me-2"></i>Add Product
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'ecomapp:admincargocreate' %}" class="btn btn-modern btn-modern-success w-100">
+                                <i class="fas fa-truck me-2"></i>Add Transport
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'ecomapp:adminorderlist' %}" class="btn btn-modern btn-modern-primary w-100">
+                                <i class="fas fa-list me-2"></i>View All Orders
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'ecomapp:adminproductlist' %}" class="btn btn-modern btn-modern-info w-100">
+                                <i class="fas fa-box me-2"></i>Manage Products
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'ecomapp:linfoxcargolist' %}" class="btn btn-modern btn-modern-info w-100">
+                                <i class="fas fa-truck-loading me-2"></i>Manage Transport
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'ecomapp:adminproductownerlist' %}" class="btn btn-modern btn-modern-primary w-100">
+                                <i class="fas fa-store me-2"></i>Product Owners
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="{% url 'ecomapp:admincustomerlist' %}" class="btn btn-modern btn-modern-primary w-100">
+                                <i class="fas fa-users me-2"></i>Customers
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Products -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0">
+                            <i class="fas fa-box me-2" style="color: var(--primary-color);"></i>Recent Products
+                        </h4>
+                        <a href="{% url 'ecomapp:adminproductlist' %}" class="btn btn-sm btn-outline-primary">
+                            View All <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                    
+                    {% if recent_products %}
+                    <div class="table-responsive">
+                        <table class="table table-modern">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Image</th>
+                                    <th>Product Title</th>
+                                    <th>Category</th>
+                                    <th>Owner</th>
+                                    <th>Price</th>
+                                    <th>Views</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in recent_products %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>
+                                        <img src="{{product.image.url}}" alt="{{product.title}}" 
+                                             style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                                    </td>
+                                    <td>
+                                        <strong>{{product.title}}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: var(--primary-color); color: white;">{{product.category}}</span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{product.productowner|default:"N/A"}}</small>
+                                    </td>
+                                    <td>
+                                        <strong style="color: var(--dark-color);">RWF {{product.selling_price|intcomma}}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: var(--info-color); color: white;">
+                                            <i class="fas fa-eye me-1"></i>{{product.view_count}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'ecomapp:adminproductedit' product.id %}" 
+                                               class="btn btn-sm btn-outline-primary"
+                                               title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'ecomapp:adminproductdelete' product.id %}" 
+                                               class="btn btn-sm btn-outline-danger"
+                                               title="Delete"
+                                               onclick="return confirm('Are you sure you want to delete {{product.title}}? This action cannot be undone.');">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                        <h5>No Products Yet</h5>
+                        <p class="text-muted">Start by adding products to the system.</p>
+                        <a href="{% url 'ecomapp:adminproductcreate' %}" class="btn btn-modern btn-modern-success">
+                            <i class="fas fa-plus-circle me-2"></i>Add First Product
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transport/Cargo -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0">
+                            <i class="fas fa-truck-loading me-2" style="color: var(--primary-color);"></i>Recent Transport
+                        </h4>
+                        <a href="{% url 'ecomapp:linfoxcargolist' %}" class="btn btn-sm btn-outline-primary">
+                            View All <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                    
+                    {% if recent_cargo %}
+                    <div class="table-responsive">
+                        <table class="table table-modern">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Image</th>
+                                    <th>Company Name</th>
+                                    <th>Driver Name</th>
+                                    <th>Address</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Views</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cargo in recent_cargo %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>
+                                        <img src="{{cargo.image.url}}" alt="{{cargo.CampanyName}}" 
+                                             style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                                    </td>
+                                    <td>
+                                        <strong>{{cargo.CampanyName}}</strong>
+                                    </td>
+                                    <td>{{cargo.driverName}}</td>
+                                    <td>
+                                        <small class="text-muted">{{cargo.address|default:"N/A"}}</small>
+                                    </td>
+                                    <td>
+                                        <strong style="color: var(--dark-color);">RWF {{cargo.price|intcomma}}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="
+                                            {% if cargo.cargo_status == 'Cargo Available' %}background-color: var(--success-color); color: white;
+                                            {% elif cargo.cargo_status == 'In Transit' %}background-color: var(--warning-color); color: white;
+                                            {% else %}background-color: var(--gray-color); color: white;{% endif %}">
+                                            {{cargo.cargo_status}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge" style="background-color: var(--info-color); color: white;">
+                                            <i class="fas fa-eye me-1"></i>{{cargo.view_count}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'ecomapp:admincargoedit' cargo.id %}" 
+                                               class="btn btn-sm btn-outline-primary"
+                                               title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'ecomapp:admincargodelete' cargo.id %}" 
+                                               class="btn btn-sm btn-outline-danger"
+                                               title="Delete"
+                                               onclick="return confirm('Are you sure you want to delete {{cargo.CampanyName}}? This action cannot be undone.');">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+                        <h5>No Transport Yet</h5>
+                        <p class="text-muted">Start by adding transport to the system.</p>
+                        <a href="{% url 'ecomapp:admincargocreate' %}" class="btn btn-modern btn-modern-success">
+                            <i class="fas fa-plus-circle me-2"></i>Add First Transport
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Orders -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0">
+                            <i class="fas fa-clock text-warning me-2"></i>Pending Orders
+                        </h4>
+                        <a href="{% url 'ecomapp:adminorderlist' %}" class="btn btn-sm btn-outline-primary">
+                            View All <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                    
+                    {% if pendingorders %}
+                    <div class="table-responsive">
+                        <table class="table table-modern">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Order ID</th>
+                                    <th>Customer</th>
+                                    <th>Ordered On</th>
+                                    <th>Amount</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in pendingorders %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>
+                                        <a href="{% url 'ecomapp:adminorderdetail' order.id %}" class="text-decoration-none">
+                                            <strong>#ORDER_{{order.id}}</strong>
+                                        </a>
+                                    </td>
+                                    <td>{{order.ordered_by}}</td>
+                                    <td>{{order.created_at|date:"M d, Y"}}<br><small class="text-muted">{{order.created_at|timesince}} ago</small></td>
+                                    <td><strong style="color: var(--dark-color);">RWF {{order.total|intcomma}}</strong></td>
+                                    <td>
+                                        <a href="{% url 'ecomapp:adminorderdetail' order.id %}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h5>No Pending Orders</h5>
+                        <p class="text-muted">All orders have been processed!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

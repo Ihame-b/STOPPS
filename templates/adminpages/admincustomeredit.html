@@ -1,0 +1,103 @@
+{% extends 'adminpages/adminbase.html' %}
+{% load static %}
+
+{% block title %}Edit Customer - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-admin">
+    <div class="container">
+        <h1 class="mb-2">
+            <i class="fas fa-edit me-2"></i>Edit Customer
+        </h1>
+        <p class="mb-0">Update customer information</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-modern">
+                <div class="card-body p-5">
+                    <form method="POST" class="form-modern">
+                        {% csrf_token %}
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="full_name" class="form-label">
+                                    <i class="fas fa-id-card me-1"></i>Full Name <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" name="full_name" id="full_name" class="form-control" value="{{customer.full_name}}" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="address" class="form-label">
+                                    <i class="fas fa-map-marker-alt me-1"></i>Address
+                                </label>
+                                <input type="text" name="address" id="address" class="form-control" value="{{customer.address|default:''}}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="town" class="form-label">
+                                    <i class="fas fa-city me-1"></i>Town/City
+                                </label>
+                                <input type="text" name="town" id="town" class="form-control" value="{{customer.town|default:''}}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="county" class="form-label">
+                                    <i class="fas fa-globe me-1"></i>County
+                                </label>
+                                <input type="text" name="county" id="county" class="form-control" value="{{customer.county|default:''}}">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="is_active" class="form-label">
+                                    <i class="fas fa-toggle-on me-1"></i>Status
+                                </label>
+                                <select name="is_active" id="is_active" class="form-select">
+                                    <option value="True" {% if customer.is_active %}selected{% endif %}>Active</option>
+                                    <option value="False" {% if not customer.is_active %}selected{% endif %}>Inactive</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-modern btn-modern-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Update Customer
+                            </button>
+                            <a href="{% url 'ecomapp:admincustomerlist' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-modern input,
+    .form-modern select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+
+    .form-modern input:focus,
+    .form-modern select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}

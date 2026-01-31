@@ -1,0 +1,100 @@
+{% extends 'adminpages/adminbase.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Edit Order - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-admin">
+    <div class="container">
+        <h1 class="mb-2">
+            <i class="fas fa-edit me-2"></i>Edit Order
+        </h1>
+        <p class="mb-0">Order #ORDER_{{order.id}}</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card-modern">
+                <div class="card-body p-5">
+                    <form method="POST" class="form-modern">
+                        {% csrf_token %}
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="order_status" class="form-label">
+                                    <i class="fas fa-info-circle me-1"></i>Order Status <span class="text-danger">*</span>
+                                </label>
+                                <select name="order_status" id="order_status" class="form-select">
+                                    <option value="Order Received" {% if order.order_status == 'Order Received' %}selected{% endif %}>Order Received</option>
+                                    <option value="Order Processing" {% if order.order_status == 'Order Processing' %}selected{% endif %}>Order Processing</option>
+                                    <option value="On the way" {% if order.order_status == 'On the way' %}selected{% endif %}>On the way</option>
+                                    <option value="Order Completed" {% if order.order_status == 'Order Completed' %}selected{% endif %}>Order Completed</option>
+                                    <option value="Order Canceled" {% if order.order_status == 'Order Canceled' %}selected{% endif %}>Order Canceled</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="payment_completed" class="form-label">
+                                    <i class="fas fa-credit-card me-1"></i>Payment Status <span class="text-danger">*</span>
+                                </label>
+                                <select name="payment_completed" id="payment_completed" class="form-select">
+                                    <option value="True" {% if order.payment_completed %}selected{% endif %}>Payment Completed</option>
+                                    <option value="False" {% if not order.payment_completed %}selected{% endif %}>Payment Pending</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="card-modern">
+                                    <div class="card-body p-3">
+                                        <h6 class="mb-2">Order Information</h6>
+                                        <p class="mb-1"><strong>Customer:</strong> {{order.ordered_by}}</p>
+                                        <p class="mb-1"><strong>Total:</strong> RWF {{order.total|intcomma}}</p>
+                                        <p class="mb-0"><strong>Order Date:</strong> {{order.created_at|date:"F d, Y"}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-modern btn-modern-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Update Order
+                            </button>
+                            <a href="{% url 'ecomapp:adminorderlist' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-modern input,
+    .form-modern select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+
+    .form-modern input:focus,
+    .form-modern select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}

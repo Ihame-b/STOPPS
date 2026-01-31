@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Profile - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>My Profile</h1>
+        <p>Manage your account and view order history</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row g-4">
+        <!-- Profile Information -->
+        <div class="col-lg-4">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">
+                        <i class="fas fa-user-circle text-primary me-2"></i>Profile Information
+                    </h3>
+                    <hr>
+                    <div class="mb-3">
+                        <strong><i class="fas fa-user me-2 text-primary"></i>Name:</strong>
+                        <p class="text-muted mb-0">{{customer.full_name}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong><i class="fas fa-at me-2 text-primary"></i>Username:</strong>
+                        <p class="text-muted mb-0">{{customer.user.username}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong><i class="fas fa-envelope me-2 text-primary"></i>Email:</strong>
+                        <p class="text-muted mb-0">{{customer.user.email}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong><i class="fas fa-map-marker-alt me-2 text-primary"></i>Address:</strong>
+                        <p class="text-muted mb-0">{{customer.address|default:"Not provided"}}</p>
+                    </div>
+                    <div class="mb-3">
+                        <strong><i class="fas fa-calendar me-2 text-primary"></i>Member Since:</strong>
+                        <p class="text-muted mb-0">{{customer.joined_on|date:"F d, Y"}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order History -->
+        <div class="col-lg-8">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">
+                        <i class="fas fa-shopping-bag text-primary me-2"></i>Order History
+                    </h3>
+                    {% if orders %}
+                    <div class="table-responsive">
+                        <table class="table table-modern">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Order ID</th>
+                                    <th>Amount</th>
+                                    <th>Ordered On</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ord in orders %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>
+                                        <a href="{% url 'ecomapp:customerorderdetail' ord.pk %}" class="text-decoration-none">
+                                            #ORDER_{{ord.id}}
+                                        </a>
+                                    </td>
+                                    <td><strong>RWF {{ord.total}}</strong></td>
+                                    <td>{{ord.created_at|timesince}} ago</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if ord.order_status == 'Order Completed' %}bg-success
+                                            {% elif ord.order_status == 'Order Canceled' %}bg-danger
+                                            {% elif ord.order_status == 'On the way' %}bg-info
+                                            {% else %}bg-warning{% endif %}">
+                                            {{ord.order_status}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'ecomapp:customerorderdetail' ord.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>View
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-shopping-bag"></i>
+                        <h4>No Orders Yet</h4>
+                        <p>You haven't placed any orders yet.</p>
+                        <a href="{% url 'ecomapp:allproducts' %}" class="btn btn-modern btn-modern-primary mt-3">
+                            <i class="fas fa-shopping-bag me-2"></i>Start Shopping
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

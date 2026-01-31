@@ -1,0 +1,105 @@
+{% extends 'adminpages/adminbase.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}All Products - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-admin">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2" style="color: #ffffff;">
+                    <i class="fas fa-box me-2"></i>All Products
+                </h1>
+                <p class="mb-0" style="color: rgba(255, 255, 255, 0.9);">Manage all products in the store</p>
+            </div>
+            <a href="{% url 'ecomapp:adminproductcreate' %}" class="btn btn-light">
+                <i class="fas fa-plus-circle me-2"></i>Add New Product
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if allproducts %}
+    <div class="card-modern">
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-modern">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Image</th>
+                            <th>Product Title</th>
+                            <th>Category</th>
+                            <th>Owner</th>
+                            <th>Price</th>
+                            <th>Views</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in allproducts %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>
+                                <img src="{{p.image.url}}" alt="{{p.title}}" 
+                                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+                            </td>
+                            <td>
+                                <strong>{{p.title}}</strong>
+                            </td>
+                            <td>
+                                <span class="badge" style="background-color: var(--primary-color); color: white;">{{p.category}}</span>
+                            </td>
+                            <td>
+                                <small class="text-muted">{{p.productowner|default:"N/A"}}</small>
+                            </td>
+                            <td>
+                                <strong style="color: var(--dark-color);">RWF {{p.selling_price|intcomma}}</strong>
+                                {% if p.marked_price > p.selling_price %}
+                                <br><small class="text-muted text-decoration-line-through">RWF {{p.marked_price|intcomma}}</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge" style="background-color: var(--info-color); color: white;">
+                                    <i class="fas fa-eye me-1"></i>{{p.view_count}}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'ecomapp:adminproductedit' p.id %}" 
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'ecomapp:adminproductdelete' p.id %}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       title="Delete"
+                                       onclick="return confirm('Are you sure you want to delete {{p.title}}? This action cannot be undone.');">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card-modern">
+        <div class="card-body p-5 text-center">
+            <i class="fas fa-box fa-4x text-muted mb-4"></i>
+            <h3>No Products</h3>
+            <p class="text-muted">Start by adding products to the system.</p>
+            <a href="{% url 'ecomapp:adminproductcreate' %}" class="btn btn-modern btn-modern-success">
+                <i class="fas fa-plus-circle me-2"></i>Add First Product
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

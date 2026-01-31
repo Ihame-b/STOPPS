@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}All Products - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>All Products</h1>
+        <p>Browse our complete product catalog</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    {% if allcategories %}
+        {% for cat in allcategories %}
+        <div class="mb-5">
+            <div class="d-flex align-items-center mb-4">
+                <h2 class="mb-0 me-3">
+                    <i class="fas fa-tag text-primary me-2"></i>{{cat.title}}
+                </h2>
+                <span class="badge bg-primary">{{cat.product_set.all|length}} products</span>
+            </div>
+            
+            {% if cat.product_set.all %}
+            <div class="row g-3">
+                {% for p in cat.product_set.all %}
+                <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+                    <div class="product-card fade-in-up">
+                        <div class="product-card-image">
+                            <a href="{% url 'ecomapp:productdetail' p.slug %}">
+                                <img src="{{p.image.url}}" alt="{{p.title}}" class="img-fluid">
+                            </a>
+                        </div>
+                        <div class="product-card-body">
+                            <h6 class="product-card-title">
+                                <a href="{% url 'ecomapp:productdetail' p.slug %}">{{p.title}}</a>
+                            </h6>
+                            <div class="product-card-category">
+                                <i class="fas fa-tag"></i>{{p.category}}
+                            </div>
+                            <div class="product-card-price">
+                                <span class="current-price">RWF {{p.selling_price}}</span>
+                                {% if p.marked_price > p.selling_price %}
+                                <span class="original-price">RWF {{p.marked_price}}</span>
+                                {% endif %}
+                            </div>
+                            <a href="{% url 'ecomapp:addtocart' p.id %}?next={% url 'ecomapp:allproducts' %}" class="product-card-btn">
+                                <i class="fas fa-shopping-cart me-1"></i>Add to Cart
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>No products available in this category yet.
+            </div>
+            {% endif %}
+        </div>
+        <hr class="my-5">
+        {% endfor %}
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-box-open"></i>
+        <h3>No Categories Available</h3>
+        <p>Check back later for new categories and products!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

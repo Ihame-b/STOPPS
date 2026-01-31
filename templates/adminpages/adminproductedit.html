@@ -1,0 +1,216 @@
+{% extends "adminpages/adminbase.html" %}
+{% load static %}
+
+{% block title %}Edit Product - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-admin">
+    <div class="container">
+        <h1 class="mb-2">
+            <i class="fas fa-edit me-2"></i>Edit Product
+        </h1>
+        <p class="mb-0">Update product information</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card-modern">
+                <div class="card-body p-5">
+                    {% if product.image %}
+                    <div class="mb-4 text-center">
+                        <h5 class="mb-3">Current Product Image</h5>
+                        <img src="{{product.image.url}}" alt="{{product.title}}" 
+                             style="max-width: 300px; max-height: 300px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" enctype="multipart/form-data" class="form-modern">
+                        {% csrf_token %}
+                        
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <label for="{{ form.title.id_for_label }}" class="form-label">
+                                    <i class="fas fa-tag me-1"></i>Product Title <span class="text-danger">*</span>
+                                </label>
+                                {{ form.title }}
+                                {% if form.title.errors %}
+                                <div class="text-danger small mt-1">{{ form.title.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.slug.id_for_label }}" class="form-label">
+                                    <i class="fas fa-link me-1"></i>Slug (URL) <span class="text-danger">*</span>
+                                </label>
+                                {{ form.slug }}
+                                {% if form.slug.errors %}
+                                <div class="text-danger small mt-1">{{ form.slug.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">
+                                    <i class="fas fa-folder me-1"></i>Category <span class="text-danger">*</span>
+                                </label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                <div class="text-danger small mt-1">{{ form.category.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.image.id_for_label }}" class="form-label">
+                                    <i class="fas fa-image me-1"></i>Main Image
+                                </label>
+                                {{ form.image }}
+                                <small class="text-muted">Leave empty to keep current image</small>
+                                {% if form.image.errors %}
+                                <div class="text-danger small mt-1">{{ form.image.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.town.id_for_label }}" class="form-label">
+                                    <i class="fas fa-city me-1"></i>Town/City
+                                </label>
+                                {{ form.town }}
+                                {% if form.town.errors %}
+                                <div class="text-danger small mt-1">{{ form.town.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.county.id_for_label }}" class="form-label">
+                                    <i class="fas fa-globe me-1"></i>County
+                                </label>
+                                {{ form.county }}
+                                {% if form.county.errors %}
+                                <div class="text-danger small mt-1">{{ form.county.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.marked_price.id_for_label }}" class="form-label">
+                                    <i class="fas fa-dollar-sign me-1"></i>Marked Price <span class="text-danger">*</span>
+                                </label>
+                                {{ form.marked_price }}
+                                {% if form.marked_price.errors %}
+                                <div class="text-danger small mt-1">{{ form.marked_price.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.selling_price.id_for_label }}" class="form-label">
+                                    <i class="fas fa-tags me-1"></i>Selling Price <span class="text-danger">*</span>
+                                </label>
+                                {{ form.selling_price }}
+                                {% if form.selling_price.errors %}
+                                <div class="text-danger small mt-1">{{ form.selling_price.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">
+                                    <i class="fas fa-align-left me-1"></i>Description <span class="text-danger">*</span>
+                                </label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                <div class="text-danger small mt-1">{{ form.description.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.warranty.id_for_label }}" class="form-label">
+                                    <i class="fas fa-shield-alt me-1"></i>Warranty
+                                </label>
+                                {{ form.warranty }}
+                                {% if form.warranty.errors %}
+                                <div class="text-danger small mt-1">{{ form.warranty.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.return_policy.id_for_label }}" class="form-label">
+                                    <i class="fas fa-undo me-1"></i>Return Policy
+                                </label>
+                                {{ form.return_policy }}
+                                {% if form.return_policy.errors %}
+                                <div class="text-danger small mt-1">{{ form.return_policy.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-12">
+                                <label for="{{ form.more_images.id_for_label }}" class="form-label">
+                                    <i class="fas fa-images me-1"></i>Additional Images
+                                </label>
+                                {{ form.more_images }}
+                                <small class="text-muted">You can select multiple images to add</small>
+                                {% if form.more_images.errors %}
+                                <div class="text-danger small mt-1">{{ form.more_images.errors }}</div>
+                                {% endif %}
+                                
+                                {% if product.productimage_set.all %}
+                                <div class="mt-3">
+                                    <label class="form-label">Current Additional Images:</label>
+                                    <div class="row g-2">
+                                        {% for pi in product.productimage_set.all %}
+                                        <div class="col-md-2">
+                                            <img src="{{pi.image.url}}" alt="" 
+                                                 style="width: 100%; height: 100px; object-fit: cover; border-radius: 8px;">
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex gap-2">
+                            <button type="submit" class="btn btn-modern btn-modern-primary btn-lg">
+                                <i class="fas fa-save me-2"></i>Update Product
+                            </button>
+                            <a href="{% url 'ecomapp:adminproductlist' %}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-modern input,
+    .form-modern select,
+    .form-modern textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+
+    .form-modern input:focus,
+    .form-modern select:focus,
+    .form-modern textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+
+    .form-modern textarea {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}

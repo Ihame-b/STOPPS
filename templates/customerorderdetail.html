@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Order Detail - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Order Details</h1>
+        <p>Order #ORDER_{{ord_obj.id}}</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row g-4">
+        <div class="col-lg-10 mx-auto">
+            <!-- Order Information -->
+            <div class="card-modern mb-4">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">
+                        <i class="fas fa-receipt text-primary me-2"></i>Order Information
+                    </h3>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-hashtag me-2 text-primary"></i>Order ID:</strong>
+                            <p class="text-muted mb-0">#ORDER_{{ord_obj.id}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-info-circle me-2 text-primary"></i>Order Status:</strong>
+                            <p class="mb-0">
+                                <span class="badge 
+                                    {% if ord_obj.order_status == 'Order Completed' %}bg-success
+                                    {% elif ord_obj.order_status == 'Order Canceled' %}bg-danger
+                                    {% elif ord_obj.order_status == 'On the way' %}bg-info
+                                    {% else %}bg-warning{% endif %}">
+                                    {{ord_obj.order_status}}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-calendar me-2 text-primary"></i>Order Date:</strong>
+                            <p class="text-muted mb-0">{{ord_obj.created_at|date:"F d, Y"}} ({{ord_obj.created_at|timesince}} ago)</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-credit-card me-2 text-primary"></i>Payment Method:</strong>
+                            <p class="text-muted mb-0">{{ord_obj.payment_method}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Information -->
+            <div class="card-modern mb-4">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">
+                        <i class="fas fa-user text-primary me-2"></i>Customer Information
+                    </h3>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-user me-2 text-primary"></i>Name:</strong>
+                            <p class="text-muted mb-0">{{ord_obj.ordered_by}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-phone me-2 text-primary"></i>Mobile:</strong>
+                            <p class="text-muted mb-0">{{ord_obj.mobile}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-envelope me-2 text-primary"></i>Email:</strong>
+                            <p class="text-muted mb-0">{{ord_obj.email|default:"Not provided"}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong><i class="fas fa-map-marker-alt me-2 text-primary"></i>Shipping Address:</strong>
+                            <p class="text-muted mb-0">{{ord_obj.shipping_address}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ordered Items -->
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">
+                        <i class="fas fa-shopping-cart text-primary me-2"></i>Ordered Items
+                    </h3>
+                    <div class="table-responsive">
+                        <table class="table table-modern">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Item</th>
+                                    <th>Rate</th>
+                                    <th>Quantity</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cp in ord_obj.cart.cartproduct_set.all %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>
+                                        <a href="{% url 'ecomapp:productdetail' cp.product.slug %}" target="_blank" class="text-decoration-none">
+                                            {{cp.product.title}}
+                                        </a>
+                                    </td>
+                                    <td>RWF {{cp.rate|intcomma}}</td>
+                                    <td>{{cp.quantity}}</td>
+                                    <td><strong>RWF {{cp.subtotal|intcomma}}</strong></td>
+                                </tr>
+                                {% endfor %}
+                                <tr class="table-active">
+                                    <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                                    <td><strong class="text-primary" style="font-size: 1.2rem;">RWF {{ord_obj.total|intcomma}}</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 text-center">
+                <a href="{% url 'ecomapp:customerprofile' %}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Profile
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

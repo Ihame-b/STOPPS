@@ -1,0 +1,82 @@
+{% extends "productOwner/productOwnerbase.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}My Chats - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-po">
+    <div class="container">
+        <h1 class="mb-2">
+            <i class="fas fa-comments me-2"></i>My Chats
+        </h1>
+        <p class="mb-0">Manage conversations with customers</p>
+    </div>
+</div>
+
+<div class="container">
+    {% if chats %}
+    <div class="card-modern">
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-modern">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Product</th>
+                            <th>Customer</th>
+                            <th>Last Message</th>
+                            <th>Updated</th>
+                            <th>Unread</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for chat in chats %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>
+                                <strong>{{chat.product.title}}</strong>
+                            </td>
+                            <td>{{chat.customer.full_name}}</td>
+                            <td>
+                                {% if chat.messages.last %}
+                                <small class="text-muted">{{chat.messages.last.message|truncatewords:10}}</small>
+                                {% else %}
+                                <small class="text-muted">No messages yet</small>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {{chat.updated_at|date:"M d, Y"}}<br>
+                                <small class="text-muted">{{chat.updated_at|timesince}} ago</small>
+                            </td>
+                            <td>
+                                {% if chat.unread_count > 0 %}
+                                <span class="badge bg-danger">{{chat.unread_count}}</span>
+                                {% else %}
+                                <span class="badge bg-success">0</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'ecomapp:productownerchatdetail' chat.id %}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-comments me-1"></i>Open Chat
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card-modern">
+        <div class="card-body p-5 text-center">
+            <i class="fas fa-comments fa-4x text-muted mb-4"></i>
+            <h3>No Chats Yet</h3>
+            <p class="text-muted">Customers will be able to contact you about your products here.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

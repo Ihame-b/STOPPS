@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}STOPPS - E-Commerce Platform{% endblock %}</title>
+
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <!-- Toastr CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.css"
+    integrity="sha512-3pIirOrwegjM6erE5gPSwkUzO+3cTjpnV9lexlNZqvupR64iZBnOOTiiLPb9M36zpMScbmUNIcHUqKD47M719g=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  {% load static %}
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="{% static 'main.css' %}">
+
+  <style>
+    /* Color variables are now in main.css for consistency */
+    :root {
+      --primary-color: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary-color: #8b5cf6;
+      --accent-color: #ec4899;
+      --success-color: #10b981;
+      --danger-color: #ef4444;
+      --warning-color: #f59e0b;
+      --info-color: #3b82f6;
+      --dark-color: #1f2937;
+      --light-color: #f9fafb;
+      --gray-color: #6b7280;
+      --border-color: #e5e7eb;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 1rem;
+      font-weight: 400;
+      color: var(--dark-color);
+      background-color: #ffffff;
+      line-height: 1.5;
+    }
+
+    /* Ensure consistent typography */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      color: var(--dark-color);
+    }
+
+    p,
+    span,
+    div,
+    a,
+    li {
+      font-size: 1rem;
+      color: var(--dark-color);
+    }
+
+    /* Modern Navbar */
+    .navbar-modern {
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      padding: 1rem 0;
+    }
+
+    .navbar-brand {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: #ffffff !important;
+      letter-spacing: -0.5px;
+    }
+
+    .navbar-nav .nav-link {
+      color: rgba(255, 255, 255, 0.9) !important;
+      font-weight: 500;
+      padding: 0.5rem 1rem !important;
+      margin: 0 0.25rem;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .navbar-nav .nav-link:hover {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: #ffffff !important;
+      transform: translateY(-2px);
+    }
+
+    .navbar-nav .btn-nav {
+      background-color: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      padding: 0.5rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+
+    .navbar-nav .btn-nav:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .search-form {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .search-input {
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      background-color: rgba(255, 255, 255, 0.1);
+      color: #ffffff;
+      padding: 0.5rem 1rem;
+    }
+
+    .search-input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .search-input:focus {
+      background-color: rgba(255, 255, 255, 0.2);
+      border-color: rgba(255, 255, 255, 0.5);
+      color: #ffffff;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-search {
+      background-color: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 0.5rem 1.25rem;
+      transition: all 0.3s ease;
+    }
+
+    .btn-search:hover {
+      background-color: rgba(255, 255, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    /* User Menu Dropdown */
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    /* Main Content */
+    .main-content {
+      min-height: calc(100vh - 200px);
+      padding: 2rem 0;
+    }
+
+    /* Modern Footer */
+    .footer-modern {
+      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      color: #ffffff;
+      padding: 3rem 0 1.5rem;
+      margin-top: 4rem;
+    }
+
+    .footer-modern h5 {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #ffffff;
+    }
+
+    .footer-modern ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .footer-modern ul li {
+      margin-bottom: 0.5rem;
+    }
+
+    .footer-modern ul li a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .footer-modern ul li a:hover {
+      color: #ffffff;
+      padding-left: 5px;
+    }
+
+    .footer-modern .social-links a {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      text-align: center;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      margin-right: 0.5rem;
+      color: #ffffff;
+      transition: all 0.3s ease;
+    }
+
+    .footer-modern .social-links a:hover {
+      background-color: var(--primary-color);
+      transform: translateY(-3px);
+    }
+
+    .footer-modern .copyright {
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 1.5rem;
+      margin-top: 2rem;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Responsive adjustments - Mobile */
+    @media (max-width: 768px) {
+      .navbar-modern {
+        padding: 0.75rem 0;
+      }
+
+      .navbar-brand {
+        font-size: 1.25rem;
+      }
+
+      .navbar-nav {
+        margin-top: 1rem;
+        width: 100%;
+      }
+
+      .navbar-nav .nav-link {
+        padding: 0.75rem 1rem !important;
+        margin: 0.25rem 0;
+        width: 100%;
+        text-align: left;
+      }
+
+      .search-form {
+        margin-top: 1rem;
+        width: 100%;
+        flex-direction: column;
+      }
+
+      .search-input {
+        width: 100%;
+        margin-bottom: 0.5rem;
+      }
+
+      .btn-search {
+        width: 100%;
+      }
+
+      .user-menu {
+        flex-direction: column;
+        width: 100%;
+        margin-top: 1rem;
+        gap: 0.5rem;
+      }
+
+      .user-menu .btn-nav {
+        width: 100%;
+        text-align: center;
+      }
+
+      .main-content {
+        padding: 1rem 0;
+      }
+
+      .footer-modern {
+        padding: 2rem 0 1rem;
+        margin-top: 2rem;
+      }
+
+      .footer-modern .row {
+        text-align: center;
+      }
+
+      .footer-modern .col-md-3 {
+        margin-bottom: 2rem;
+      }
+    }
+
+    /* Extra Small Devices */
+    @media (max-width: 575.98px) {
+      .navbar-brand {
+        font-size: 1.1rem;
+      }
+
+      .navbar-toggler {
+        padding: 0.25rem 0.5rem;
+        font-size: 1rem;
+      }
+
+      .page-header {
+        padding: 1.5rem 0;
+      }
+
+      .page-header h1 {
+        font-size: 1.75rem;
+      }
+
+      .page-header p {
+        font-size: 0.9rem;
+      }
+    }
+
+    /* Smooth scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Loading animation */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    /* Cart Badge Animation */
+    #cart-badge {
+      animation: pulse 2s infinite;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: translate(-50%, -50%) scale(1);
+      }
+
+      50% {
+        transform: translate(-50%, -50%) scale(1.1);
+      }
+    }
+
+    .nav-link.position-relative {
+      padding-right: 1.5rem !important;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Modern Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-modern">
+    <div class="container">
+      <a class="navbar-brand" href="{% url 'ecomapp:home' %}">
+        <i class="fas fa-shopping-bag me-2"></i>STOPPS
+      </a>
+
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ecomapp:home' %}">
+              <i class="fas fa-home me-1"></i>Home
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'ecomapp:allproducts' %}">
+              <i class="fas fa-th-large me-1"></i>Categories
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link position-relative" href="{% url 'ecomapp:mycart' %}">
+              <i class="fas fa-shopping-cart me-1"></i>Cart
+              {% if cart_item_count > 0 %}
+              <span class="badge bg-danger rounded-pill position-absolute top-0 start-100 translate-middle"
+                id="cart-badge" style="font-size: 0.7rem; padding: 0.25em 0.5em;">
+                {{ cart_item_count }}
+              </span>
+              {% endif %}
+            </a>
+          </li>
+        </ul>
+
+        <form class="search-form me-3" action="{% url 'ecomapp:search' %}" method="GET">
+          <input name="keyword" class="form-control search-input" type="search" placeholder="Search products..."
+            aria-label="Search" required style="min-width: 250px;">
+          <button class="btn btn-search" type="submit">
+            <i class="fas fa-search"></i>
+          </button>
+        </form>
+
+        <div class="user-menu">
+          {% if request.user.is_authenticated and request.user.customer %}
+          <a href="{% url 'ecomapp:customerprofile' %}" class="btn btn-nav">
+            <i class="fas fa-user me-1"></i>Profile
+          </a>
+          <a href="{% url 'ecomapp:customerlogout' %}" class="btn btn-nav">
+            <i class="fas fa-sign-out-alt me-1"></i>Logout
+          </a>
+          {% else %}
+          <div class="dropdown">
+            <button class="btn btn-nav dropdown-toggle" type="button" id="registerDropdown" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              <i class="fas fa-user-plus me-1"></i>Register
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="registerDropdown">
+              <li><a class="dropdown-item" href="{% url 'ecomapp:customerregistration' %}">As Customer</a></li>
+              <li><a class="dropdown-item" href="{% url 'ecomapp:poregistration' %}">As Product Owner</a></li>
+            </ul>
+          </div>
+          <div class="dropdown">
+            <button class="btn btn-nav dropdown-toggle" type="button" id="loginDropdown" data-bs-toggle="dropdown"
+              aria-expanded="false">
+              <i class="fas fa-sign-in-alt me-1"></i>Login
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="loginDropdown">
+              <li><a class="dropdown-item" href="{% url 'ecomapp:customerlogin' %}">As Customer</a></li>
+              <li><a class="dropdown-item" href="{% url 'ecomapp:productOwnerlogin' %}">As Product Owner</a></li>
+              <li><a class="dropdown-item" href="{% url 'ecomapp:adminlogin' %}">As Admin/Linfox</a></li>
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Messages/Notifications -->
+  {% if messages %}
+  <div class="container mt-3">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show alert-modern" role="alert">
+      {% if message.tags == 'success' %}
+      <i class="fas fa-check-circle me-2"></i>
+      {% elif message.tags == 'error' %}
+      <i class="fas fa-exclamation-circle me-2"></i>
+      {% elif message.tags == 'warning' %}
+      <i class="fas fa-exclamation-triangle me-2"></i>
+      {% else %}
+      <i class="fas fa-info-circle me-2"></i>
+      {% endif %}
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Main Content -->
+  <main class="main-content fade-in">
+    {% block content %}
+    {% endblock %}
+  </main>
+
+  <!-- Modern Footer -->
+  <footer class="footer-modern">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 mb-4">
+          <h5><i class="fas fa-shopping-bag me-2"></i>STOPPS</h5>
+          <p style="color: rgba(255, 255, 255, 0.7);">
+            Your trusted e-commerce platform for quality products and reliable delivery services.
+          </p>
+          <div class="social-links mt-3">
+            <a href="#"><i class="fab fa-facebook-f"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+          </div>
+        </div>
+        <div class="col-md-2 mb-4">
+          <h5>Quick Links</h5>
+          <ul>
+            <li><a href="{% url 'ecomapp:home' %}">Home</a></li>
+            <li><a href="{% url 'ecomapp:allproducts' %}">Products</a></li>
+            <li><a href="{% url 'ecomapp:about' %}">About</a></li>
+            <li><a href="{% url 'ecomapp:contact' %}">Contact</a></li>
+          </ul>
+        </div>
+        <div class="col-md-3 mb-4">
+          <h5>Customer Service</h5>
+          <ul>
+            <li><a href="#">FAQ</a></li>
+            <li><a href="#">Shipping Info</a></li>
+            <li><a href="#">Returns</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+          </ul>
+        </div>
+        <div class="col-md-3 mb-4">
+          <h5>Contact Us</h5>
+          <ul>
+            <li><i class="fas fa-map-marker-alt me-2"></i>Kigali, Rwanda</li>
+            <li><i class="fas fa-envelope me-2"></i>info@stopps.com</li>
+            <li><i class="fas fa-phone me-2"></i>+250 788 000 000</li>
+          </ul>
+        </div>
+      </div>
+      <div class="copyright">
+        <p class="mb-0">&copy; {% now "Y" %} STOPPS. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <!-- Toastr JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"
+    integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw=="
+    crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- Toastr Configuration -->
+  <script>
+    toastr.options = {
+      "closeButton": true,
+      "debug": false,
+      "newestOnTop": true,
+      "progressBar": true,
+      "positionClass": "toast-top-right",
+      "preventDuplicates": false,
+      "onclick": null,
+      "showDuration": "300",
+      "hideDuration": "1000",
+      "timeOut": "3000",
+      "extendedTimeOut": "1000",
+      "showEasing": "swing",
+      "hideEasing": "linear",
+      "showMethod": "fadeIn",
+      "hideMethod": "fadeOut"
+    };
+  </script>
+
+  <!-- Show Django messages as toast notifications -->
+  {% if messages %}
+  <script>
+    {% for message in messages %}
+    {% if message.tags == 'error' %}
+    toastr.error('{{ message }}');
+    {% elif message.tags == 'warning' %}
+    toastr.warning('{{ message }}');
+    {% elif message.tags == 'info' %}
+    toastr.info('{{ message }}');
+    {% else %}
+    toastr.success('{{ message }}');
+    {% endif %}
+    {% endfor %}
+  </script>
+  {% endif %}
+
+  {% block extra_js %}
+  {% endblock %}
+</body>
+
+</html>

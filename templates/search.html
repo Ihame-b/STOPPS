@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Search Results - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <h1>Search Results</h1>
+        <p>Results for "{{request.GET.keyword}}"</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    {% if results %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <h3 class="mb-0">
+                <i class="fas fa-search text-primary me-2"></i>
+                Found <span class="text-primary">{{ results|length }}</span> result{{ results|length|pluralize }} for 
+                <span class="text-info">"{{request.GET.keyword}}"</span>
+            </h3>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        {% for result in results %}
+        <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+            <div class="product-card fade-in-up">
+                <div class="product-card-image">
+                    <a href="{% url 'ecomapp:productdetail' result.slug %}">
+                        <img src="{{result.image.url}}" alt="{{result.title}}" class="img-fluid">
+                    </a>
+                </div>
+                <div class="product-card-body">
+                    <h6 class="product-card-title">
+                        <a href="{% url 'ecomapp:productdetail' result.slug %}">{{result.title}}</a>
+                    </h6>
+                    <div class="product-card-category">
+                        <i class="fas fa-tag"></i>{{result.category}}
+                    </div>
+                    <div class="product-card-price">
+                        <span class="current-price">RWF {{result.selling_price}}</span>
+                        {% if result.marked_price > result.selling_price %}
+                        <span class="original-price">RWF {{result.marked_price}}</span>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'ecomapp:addtocart' result.id %}?next={% url 'ecomapp:search' %}?keyword={{request.GET.keyword}}" class="product-card-btn">
+                        <i class="fas fa-shopping-cart me-1"></i>Add to Cart
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-search"></i>
+        <h3>No Results Found</h3>
+        <p>We couldn't find any products matching "{{request.GET.keyword}}"</p>
+        <a href="{% url 'ecomapp:allproducts' %}" class="btn btn-modern btn-modern-primary mt-3">
+            <i class="fas fa-th-large me-2"></i>Browse All Products
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

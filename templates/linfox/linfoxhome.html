@@ -1,0 +1,140 @@
+{% extends "linfox/linfoxbase.html" %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Linfox Dashboard - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-linfox">
+    <div class="container">
+        <h1 class="mb-2">
+            <i class="fas fa-truck me-2"></i>Linfox Dashboard
+        </h1>
+        <p class="mb-0">Manage transport and cargo services</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-card-icon success">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <h3 class="mb-1">{{total_cargo}}</h3>
+                <p class="text-muted mb-0">Total Cargo</p>
+                <a href="{% url 'ecomapp:linfoxcargolist' %}" class="btn btn-sm btn-outline-success mt-2">
+                    View All <i class="fas fa-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-card-icon primary">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3 class="mb-1">{{available_cargo}}</h3>
+                <p class="text-muted mb-0">Available Cargo</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <div class="stat-card-icon warning">
+                    <i class="fas fa-shipping-fast"></i>
+                </div>
+                <h3 class="mb-1">{{in_transit_cargo}}</h3>
+                <p class="text-muted mb-0">In Transit</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <h4 class="mb-4">
+                        <i class="fas fa-bolt me-2" style="color: var(--success-color);"></i>Quick Actions
+                    </h4>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <a href="{% url 'ecomapp:linfoxproductcreate' %}" class="btn btn-modern btn-modern-success w-100">
+                                <i class="fas fa-plus-circle me-2"></i>Add New Cargo
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'ecomapp:linfoxcargolist' %}" class="btn btn-modern btn-modern-primary w-100">
+                                <i class="fas fa-list me-2"></i>View All Cargo
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Cargo -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0">
+                            <i class="fas fa-truck-loading me-2" style="color: var(--success-color);"></i>Recent Cargo
+                        </h4>
+                        <a href="{% url 'ecomapp:linfoxcargolist' %}" class="btn btn-sm btn-outline-success">
+                            View All <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                    
+                    {% if all_cargo %}
+                    <div class="table-responsive">
+                        <table class="table table-modern">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Company</th>
+                                    <th>Driver</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Joined On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cargo in all_cargo %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td><strong>{{cargo.CampanyName}}</strong></td>
+                                    <td>{{cargo.driverName}}</td>
+                                    <td><strong style="color: var(--dark-color);">RWF {{cargo.price|intcomma}}</strong></td>
+                                    <td>
+                                        <span class="badge" style="
+                                            {% if cargo.cargo_status == 'Cargo Available' %}background-color: var(--success-color); color: white;
+                                            {% elif cargo.cargo_status == 'In Transit' %}background-color: var(--warning-color); color: white;
+                                            {% else %}background-color: var(--gray-color); color: white;{% endif %}">
+                                            {{cargo.cargo_status}}
+                                        </span>
+                                    </td>
+                                    <td>{{cargo.joined_on|date:"M d, Y"}}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+                        <h5>No Cargo Yet</h5>
+                        <p class="text-muted">Start by adding cargo to the system.</p>
+                        <a href="{% url 'ecomapp:linfoxproductcreate' %}" class="btn btn-modern btn-modern-success">
+                            <i class="fas fa-plus-circle me-2"></i>Add First Cargo
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,114 @@
+{% extends "productOwner/productOwnerbase.html" %}
+{% load static %}
+
+{% block title %}My Products - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-po">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="fas fa-box-open me-2"></i>My Products
+                </h1>
+                <p class="mb-0">Manage all your product listings</p>
+            </div>
+            <a href="{% url 'ecomapp:poproductcreate' %}" class="btn btn-light">
+                <i class="fas fa-plus-circle me-2"></i>Add New Product
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if allproducts %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <div class="table-responsive">
+                        <table class="table table-modern">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Image</th>
+                                    <th>Product Title</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Views</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in allproducts %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>
+                                        <img src="{{p.image.url}}" alt="{{p.title}}" 
+                                             style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+                                    </td>
+                                    <td>
+                                        <strong>{{p.title}}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary">{{p.category}}</span>
+                                    </td>
+                                    <td>
+                                        <strong class="text-primary">RWF {{p.selling_price}}</strong>
+                                        {% if p.marked_price > p.selling_price %}
+                                        <br><small class="text-muted text-decoration-line-through">RWF {{p.marked_price}}</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            <i class="fas fa-eye me-1"></i>{{p.view_count}}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{% url 'ecomapp:productdetail' p.slug %}" 
+                                               class="btn btn-sm btn-outline-info" 
+                                               target="_blank"
+                                               title="View on Store">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{% url 'ecomapp:poproductedit' p.id %}" 
+                                               class="btn btn-sm btn-outline-primary"
+                                               title="Edit Product">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="{% url 'ecomapp:poproductdelete' p.id %}" 
+                                               class="btn btn-sm btn-outline-danger"
+                                               title="Delete Product"
+                                               onclick="return confirm('Are you sure you want to delete {{p.title}}? This action cannot be undone.');">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body p-5 text-center">
+                    <i class="fas fa-box-open fa-4x text-muted mb-4"></i>
+                    <h3>No Products Yet</h3>
+                    <p class="text-muted mb-4">Start by adding your first product to the store</p>
+                    <a href="{% url 'ecomapp:poproductcreate' %}" class="btn btn-modern btn-modern-primary">
+                        <i class="fas fa-plus-circle me-2"></i>Add Your First Product
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

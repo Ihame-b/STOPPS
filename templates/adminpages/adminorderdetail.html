@@ -1,0 +1,180 @@
+{% extends 'adminpages/adminbase.html' %}
+{% load humanize %}
+
+{% block title %}Order Detail - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-admin">
+    <div class="container">
+        <h1 class="mb-2">
+            <i class="fas fa-file-invoice me-2"></i>Order Detail
+        </h1>
+        <p class="mb-0">Order #ORDER_{{ord_obj.id}}</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Order Information -->
+            <div class="card-modern mb-4">
+                <div class="card-body p-4">
+                    <h4 class="mb-4">
+                        <i class="fas fa-info-circle text-primary me-2"></i>Order Information
+                    </h4>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Order ID:</strong></p>
+                            <p class="text-primary">#ORDER_{{ord_obj.id}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Order Status:</strong></p>
+                            <span class="badge 
+                                {% if ord_obj.order_status == 'Order Completed' %}bg-success
+                                {% elif ord_obj.order_status == 'Order Canceled' %}bg-danger
+                                {% elif ord_obj.order_status == 'On the way' %}bg-info
+                                {% elif ord_obj.order_status == 'Order Processing' %}bg-warning
+                                {% else %}bg-secondary{% endif %} fs-6">
+                                {{ord_obj.order_status}}
+                            </span>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Order Date:</strong></p>
+                            <p>{{ord_obj.created_at|date:"F d, Y"}}<br><small class="text-muted">{{ord_obj.created_at|timesince}} ago</small></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Payment Status:</strong></p>
+                            {% if ord_obj.payment_completed %}
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>Payment Completed
+                            </span>
+                            {% else %}
+                            <span class="badge bg-warning">
+                                <i class="fas fa-clock me-1"></i>Not Paid
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Customer Information -->
+            <div class="card-modern mb-4">
+                <div class="card-body p-4">
+                    <h4 class="mb-4">
+                        <i class="fas fa-user text-primary me-2"></i>Customer Information
+                    </h4>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Name:</strong></p>
+                            <p>{{ord_obj.ordered_by}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Mobile:</strong></p>
+                            <p>{{ord_obj.mobile}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Email:</strong></p>
+                            <p>{{ord_obj.email}}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="mb-2"><strong>Payment Method:</strong></p>
+                            <p>{{ord_obj.payment_method}}</p>
+                        </div>
+                        <div class="col-12">
+                            <p class="mb-2"><strong>Shipping Address:</strong></p>
+                            <p>{{ord_obj.shipping_address}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ordered Items -->
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <h4 class="mb-4">
+                        <i class="fas fa-shopping-cart text-primary me-2"></i>Ordered Items
+                    </h4>
+                    <div class="table-responsive">
+                        <table class="table table-modern">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Item</th>
+                                    <th>Rate</th>
+                                    <th>Quantity</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for cp in ord_obj.cart.cartproduct_set.all %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>
+                                        <a target="_blank" href="{% url 'ecomapp:productdetail' cp.product.slug %}" class="text-decoration-none">
+                                            <strong>{{cp.product.title}}</strong>
+                                        </a>
+                                        {% if cp.cargo %}
+                                        <br><small class="text-muted">
+                                            <i class="fas fa-truck me-1"></i>Transport: {{cp.cargo.CampanyName}} ({{cp.cargo.driverName}})
+                                        </small>
+                                        {% endif %}
+                                    </td>
+                                    <td>RWF {{cp.rate|intcomma}}</td>
+                                    <td>{{cp.quantity}}</td>
+                                    <td><strong>RWF {{cp.subtotal|intcomma}}</strong></td>
+                                </tr>
+                                {% endfor %}
+                                <tr class="table-light">
+                                    <th colspan="4" class="text-end">Total:</th>
+                                    <th class="text-primary">RWF {{ord_obj.total|intcomma}}</th>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Update -->
+        <div class="col-lg-4">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <h4 class="mb-4">
+                        <i class="fas fa-edit text-primary me-2"></i>Update Order Status
+                    </h4>
+                    <form action="{% url 'ecomapp:adminorderstatuschange' ord_obj.id %}" method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="status" class="form-label">Order Status</label>
+                            <select name="status" id="status" class="form-select">
+                                {% for i, j in allstatus %}
+                                <option value="{{i}}" {% if i == ord_obj.order_status %}selected{% endif %}>{{j}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-modern btn-modern-primary w-100">
+                            <i class="fas fa-save me-2"></i>Update Status
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card-modern mt-4">
+                <div class="card-body p-4">
+                    <h5 class="mb-3">Quick Actions</h5>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'ecomapp:adminorderlist' %}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-2"></i>All Orders
+                        </a>
+                        <a href="{% url 'ecomapp:adminhome' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

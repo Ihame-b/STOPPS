@@ -1,0 +1,100 @@
+{% extends 'adminpages/adminbase.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}All Customers - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-admin">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">
+                    <i class="fas fa-users me-2"></i>All Customers
+                </h1>
+                <p class="mb-0">Manage all customers in the system</p>
+            </div>
+            <a href="{% url 'ecomapp:admincustomercreate' %}" class="btn btn-light">
+                <i class="fas fa-plus-circle me-2"></i>Add Customer
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if allcustomers %}
+    <div class="card-modern">
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-modern">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Full Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Address</th>
+                            <th>Town/City</th>
+                            <th>County</th>
+                            <th>Joined On</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for customer in allcustomers %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td><strong>{{customer.full_name}}</strong></td>
+                            <td>{{customer.user.username}}</td>
+                            <td>{{customer.user.email|default:"N/A"}}</td>
+                            <td><small class="text-muted">{{customer.address|default:"N/A"}}</small></td>
+                            <td>{{customer.town|default:"N/A"}}</td>
+                            <td>{{customer.county|default:"N/A"}}</td>
+                            <td>
+                                {{customer.joined_on|date:"M d, Y"}}<br>
+                                <small class="text-muted">{{customer.joined_on|timesince}} ago</small>
+                            </td>
+                            <td>
+                                {% if customer.is_active %}
+                                <span class="badge bg-success">Active</span>
+                                {% else %}
+                                <span class="badge bg-danger">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'ecomapp:admincustomeredit' customer.id %}" 
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'ecomapp:admincustomerdelete' customer.id %}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       title="Delete"
+                                       onclick="return confirm('Are you sure you want to delete {{customer.full_name}}? This action cannot be undone.');">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card-modern">
+        <div class="card-body p-5 text-center">
+            <i class="fas fa-users fa-4x text-muted mb-4"></i>
+            <h3>No Customers</h3>
+            <p class="text-muted">No customers registered yet.</p>
+            <a href="{% url 'ecomapp:admincustomercreate' %}" class="btn btn-modern btn-modern-primary">
+                <i class="fas fa-plus-circle me-2"></i>Add First Customer
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
