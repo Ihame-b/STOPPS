@@ -704,8 +704,20 @@ class AdminLoginView(FormView):
         uname = form.cleaned_data.get("username")
         pword = form.cleaned_data["password"]
         usr = authenticate(username=uname, password=pword)
-        if usr is not None and Admin.objects.filter(user=usr).exists():
-            login(self.request, usr)
+        if usr is not None:
+            # Check if user is Admin or LinfoxUser
+            is_admin = Admin.objects.filter(user=usr).exists()
+            is_linfox = LinfoxUser.objects.filter(user=usr).exists()
+            
+            if is_admin or is_linfox:
+                login(self.request, usr)
+                # Redirect based on user type
+                if is_linfox:
+                    return redirect("ecomapp:linfoxhome")
+                elif is_admin:
+                    return redirect("ecomapp:adminhome")
+            else:
+                return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials or you are not authorized"})
         else:
             return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials"})
         return super().form_valid(form)
@@ -713,8 +725,14 @@ class AdminLoginView(FormView):
 
 class AdminRequiredMixin(object):
     def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated and Admin.objects.filter(user=request.user).exists():
-            pass
+        if request.user.is_authenticated:
+            # Allow both Admin and LinfoxUser
+            is_admin = Admin.objects.filter(user=request.user).exists()
+            is_linfox = LinfoxUser.objects.filter(user=request.user).exists()
+            if is_admin or is_linfox:
+                pass
+            else:
+                return redirect("/admin-login/")
         else:
             return redirect("/admin-login/")
         return super().dispatch(request, *args, **kwargs)
@@ -985,18 +1003,36 @@ class LinfoxLoginView(FormView):
         uname = form.cleaned_data.get("username")
         pword = form.cleaned_data["password"]
         usr = authenticate(username=uname, password=pword)
-        if usr is not None and LinfoxUser.objects.filter(user=usr).exists():
-            login(self.request, usr)
+        if usr is not None:
+            # Check if user is Admin or LinfoxUser
+            is_admin = Admin.objects.filter(user=usr).exists()
+            is_linfox = LinfoxUser.objects.filter(user=usr).exists()
+            
+            if is_admin or is_linfox:
+                login(self.request, usr)
+                # Redirect based on user type
+                if is_linfox:
+                    return redirect("ecomapp:linfoxhome")
+                elif is_admin:
+                    return redirect("ecomapp:adminhome")
+            else:
+                return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials or you are not authorized"})
         else:
-            return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials or you are not a Linfox user"})
+            return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials"})
         return super().form_valid(form)
 
 class LinfoxRequiredMixin(object):
     def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated and LinfoxUser.objects.filter(user=request.user).exists():
-            pass
+        if request.user.is_authenticated:
+            # Allow both Admin and LinfoxUser
+            is_admin = Admin.objects.filter(user=request.user).exists()
+            is_linfox = LinfoxUser.objects.filter(user=request.user).exists()
+            if is_admin or is_linfox:
+                pass
+            else:
+                return redirect("/admin-login/")
         else:
-            return redirect("/linfox-login/")
+            return redirect("/admin-login/")
         return super().dispatch(request, *args, **kwargs)
 
 class LinfoxHomeView(LinfoxRequiredMixin, TemplateView):
