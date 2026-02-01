@@ -8,3 +8,4 @@ whitenoise
 psycopg2-binary
 dj-database-url>=2.0.0
 requests>=2.31.0
+humanfriendly>=10.0
