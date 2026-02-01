@@ -1324,9 +1324,9 @@ def create_admin_view(request):
     """
     # Allow GET to show credentials (for easy access)
     if request.method == 'GET':
-        username = os.environ.get('ADMIN_USERNAME', 'admin')
+        username = os.environ.get('ADMIN_USERNAME', 'ihame')
         email = os.environ.get('ADMIN_EMAIL', 'admin@stopps.com')
-        password = os.environ.get('ADMIN_PASSWORD', 'Admin@123')
+        password = os.environ.get('ADMIN_PASSWORD', 'Ihame@123')
         
         return JsonResponse({
             'info': 'Current default credentials',
@@ -1343,9 +1343,9 @@ def create_admin_view(request):
         }, status=405)
     
     # Get credentials from environment variables, with secure defaults for testing
-    username = os.environ.get('ADMIN_USERNAME', 'admin')
+    username = os.environ.get('ADMIN_USERNAME', 'ihame')
     email = os.environ.get('ADMIN_EMAIL', 'admin@stopps.com')
-    password = os.environ.get('ADMIN_PASSWORD', 'Admin@123')
+    password = os.environ.get('ADMIN_PASSWORD', 'Ihame@123')
     
     try:
         # Get or create user
