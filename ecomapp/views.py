@@ -1027,12 +1027,12 @@ class LinfoxLoginView(FormView):
     """
     Linfox Login View
     
-    Accepts both Super Admin (Admin) and Linfox User (LinfoxUser) logins.
-    Admin users can access everything, so they can login here too.
+    Only Linfox User (LinfoxUser) can login from this page.
+    Admin users should use the admin login page instead.
     
     Redirects:
     - LinfoxUser → /linfox-home/ (their only accessible dashboard)
-    - Super Admin (Admin) → /admin-home/ (default dashboard, but can access Linfox pages too)
+    - Admin users → Error message directing to /admin-login/
     """
     template_name = "linfox/linfoxlogin.html"
     form_class = CustomerLoginForm
@@ -1046,15 +1046,16 @@ class LinfoxLoginView(FormView):
             is_admin = Admin.objects.filter(user=usr).exists()
             is_linfox = LinfoxUser.objects.filter(user=usr).exists()
             
-            if is_admin:
-                # Admin users can login from Linfox login and access everything
-                # Redirect to admin home (default), but they can still access Linfox pages
-                login(self.request, usr)
-                return redirect("ecomapp:adminhome")
-            elif is_linfox:
+            if is_linfox:
                 # LinfoxUser can only access Linfox dashboard
                 login(self.request, usr)
                 return redirect("ecomapp:linfoxhome")
+            elif is_admin:
+                # Admin users should use admin login page
+                return render(self.request, self.template_name, {
+                    "form": self.form_class, 
+                    "error": "Admin users should login from the admin login page. Please use /admin-login/ instead."
+                })
             else:
                 return render(self.request, self.template_name, {
                     "form": self.form_class, 
