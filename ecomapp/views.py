@@ -1309,3 +1309,53 @@ class AdminCategoryDeleteView(AdminRequiredMixin, DeleteView):
         messages.success(request, f"Category '{category.title}' deleted successfully!")
         return super().delete(request, *args, **kwargs)
 
+
+# Setup view for creating admin user (one-time use)
+from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
+import os
+
+@csrf_exempt
+def create_admin_view(request):
+    """
+    One-time endpoint to create admin user from environment variables.
+    Access via POST to /setup/create-admin/
+    """
+    if request.method != 'POST':
+        return JsonResponse({
+            'error': 'Use POST method',
+            'instructions': 'Send a POST request to this endpoint to create admin user'
+        }, status=405)
+    
+    # Check if superuser already exists
+    if User.objects.filter(is_superuser=True).exists():
+        return JsonResponse({
+            'error': 'Admin user already exists',
+            'message': 'A superuser already exists in the database'
+        }, status=400)
+    
+    # Get credentials from environment variables
+    username = os.environ.get('ADMIN_USERNAME', 'admin')
+    email = os.environ.get('ADMIN_EMAIL', 'admin@example.com')
+    password = os.environ.get('ADMIN_PASSWORD', 'admin123')
+    
+    try:
+        # Create superuser
+        User.objects.create_superuser(
+            username=username,
+            email=email,
+            password=password
+        )
+        return JsonResponse({
+            'success': True,
+            'message': f'Admin user "{username}" created successfully',
+            'username': username,
+            'email': email,
+            'note': 'You can now login at /admin/ or /admin-login/'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'error': 'Failed to create admin user',
+            'details': str(e)
+        }, status=500)
+

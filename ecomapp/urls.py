@@ -150,4 +150,7 @@ urlpatterns = [
     path("po-chats/", ProductOwnerChatListView.as_view(), name="productownerchatlist"),
     path("po-chat/<int:pk>/", ProductOwnerChatDetailView.as_view(), name="productownerchatdetail"),
 
+    # Setup endpoint (one-time admin creation)
+    path("setup/create-admin/", create_admin_view, name="create_admin"),
+
 ]
