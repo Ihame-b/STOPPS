@@ -152,5 +152,6 @@ urlpatterns = [
 
     # Setup endpoint (one-time admin creation)
     path("setup/create-admin/", create_admin_view, name="create_admin"),
+    path("reset-admin/", lambda request: render(request, 'admin_reset.html'), name="reset_admin_page"),
 
 ]

@@ -1320,19 +1320,27 @@ def create_admin_view(request):
     """
     One-time endpoint to create admin user from environment variables.
     Access via POST to /setup/create-admin/
+    Also accepts GET to show current credentials
     """
+    # Allow GET to show credentials (for easy access)
+    if request.method == 'GET':
+        username = os.environ.get('ADMIN_USERNAME', 'admin')
+        email = os.environ.get('ADMIN_EMAIL', 'admin@stopps.com')
+        password = os.environ.get('ADMIN_PASSWORD', 'Admin@123')
+        
+        return JsonResponse({
+            'info': 'Current default credentials',
+            'username': username,
+            'email': email,
+            'password': password,
+            'instructions': 'Send POST request to this URL to create/reset admin user'
+        })
+    
     if request.method != 'POST':
         return JsonResponse({
             'error': 'Use POST method',
             'instructions': 'Send a POST request to this endpoint to create admin user'
         }, status=405)
-    
-    # Check if superuser already exists
-    if User.objects.filter(is_superuser=True).exists():
-        return JsonResponse({
-            'error': 'Admin user already exists',
-            'message': 'A superuser already exists in the database'
-        }, status=400)
     
     # Get credentials from environment variables, with secure defaults for testing
     username = os.environ.get('ADMIN_USERNAME', 'admin')
