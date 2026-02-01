@@ -11,31 +11,44 @@ class Command(BaseCommand):
     help = 'Creates a superuser from environment variables (ADMIN_USERNAME, ADMIN_EMAIL, ADMIN_PASSWORD)'
 
     def handle(self, *args, **options):
-        # Get credentials from environment variables
+        # Get credentials from environment variables, with secure defaults for testing
         username = os.environ.get('ADMIN_USERNAME', 'admin')
-        email = os.environ.get('ADMIN_EMAIL', 'admin@example.com')
-        password = os.environ.get('ADMIN_PASSWORD', 'admin123')
+        email = os.environ.get('ADMIN_EMAIL', 'admin@stopps.com')
+        password = os.environ.get('ADMIN_PASSWORD', 'Admin@123')
         
-        # Check if user already exists
-        if User.objects.filter(username=username).exists():
-            self.stdout.write(
-                self.style.WARNING(f'User "{username}" already exists. Skipping creation.')
-            )
-            return
-        
-        # Create superuser
+        # Create superuser (or update if exists)
         try:
-            User.objects.create_superuser(
+            user, created = User.objects.get_or_create(
                 username=username,
-                email=email,
-                password=password
+                defaults={
+                    'email': email,
+                    'is_staff': True,
+                    'is_superuser': True
+                }
             )
-            self.stdout.write(
-                self.style.SUCCESS(
-                    f'Successfully created superuser "{username}" with email "{email}"'
+            
+            if created:
+                # New user - set password
+                user.set_password(password)
+                user.save()
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f'Successfully created superuser "{username}" with email "{email}"'
+                    )
                 )
-            )
+            else:
+                # User exists - update password and ensure superuser status
+                user.email = email
+                user.is_staff = True
+                user.is_superuser = True
+                user.set_password(password)  # Reset password to ensure it's correct
+                user.save()
+                self.stdout.write(
+                    self.style.SUCCESS(
+                        f'Updated existing user "{username}" - password reset to default'
+                    )
+                )
         except Exception as e:
             self.stdout.write(
-                self.style.ERROR(f'Error creating superuser: {str(e)}')
+                self.style.ERROR(f'Error creating/updating superuser: {str(e)}')
             )

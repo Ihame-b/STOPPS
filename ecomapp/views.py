@@ -1334,28 +1334,41 @@ def create_admin_view(request):
             'message': 'A superuser already exists in the database'
         }, status=400)
     
-    # Get credentials from environment variables
+    # Get credentials from environment variables, with secure defaults for testing
     username = os.environ.get('ADMIN_USERNAME', 'admin')
-    email = os.environ.get('ADMIN_EMAIL', 'admin@example.com')
-    password = os.environ.get('ADMIN_PASSWORD', 'admin123')
+    email = os.environ.get('ADMIN_EMAIL', 'admin@stopps.com')
+    password = os.environ.get('ADMIN_PASSWORD', 'Admin@123')
     
     try:
-        # Create superuser
-        User.objects.create_superuser(
+        # Get or create user
+        user, created = User.objects.get_or_create(
             username=username,
-            email=email,
-            password=password
+            defaults={
+                'email': email,
+                'is_staff': True,
+                'is_superuser': True
+            }
         )
+        
+        # Update password and ensure superuser status (even if user exists)
+        user.email = email
+        user.is_staff = True
+        user.is_superuser = True
+        user.set_password(password)  # Reset password to ensure it's correct
+        user.save()
+        
+        action = 'created' if created else 'updated'
         return JsonResponse({
             'success': True,
-            'message': f'Admin user "{username}" created successfully',
+            'message': f'Admin user "{username}" {action} successfully',
             'username': username,
             'email': email,
+            'password': password,
             'note': 'You can now login at /admin/ or /admin-login/'
         })
     except Exception as e:
         return JsonResponse({
-            'error': 'Failed to create admin user',
+            'error': 'Failed to create/update admin user',
             'details': str(e)
         }, status=500)
 

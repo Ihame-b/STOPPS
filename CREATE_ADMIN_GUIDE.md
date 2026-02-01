@@ -147,10 +147,10 @@ Use the credentials from your environment variables to login.
 
 If you don't set environment variables, the system will use:
 - **Username**: `admin`
-- **Email**: `admin@example.com`
-- **Password**: `admin123`
+- **Email**: `admin@stopps.com`
+- **Password**: `Admin@123`
 
-⚠️ **Important**: Change these defaults immediately in production!
+⚠️ **Important**: These are for testing only. Change the password immediately after first login in production!
 
 ---
 
