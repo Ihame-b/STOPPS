@@ -121,13 +121,13 @@
 </div>
 
 <style>
-    /* Match admin home page header styling */
+    /* Match admin home page header styling exactly */
     .page-header-admin {
-        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-        color: #ffffff;
-        padding: 1rem 0;
-        margin-bottom: 1.5rem;
-        border-radius: 0 0 24px 24px;
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important;
+        color: #ffffff !important;
+        padding: 1rem 0 !important;
+        margin-bottom: 1.5rem !important;
+        border-radius: 0 0 24px 24px !important;
     }
     
     .page-header-admin h1 {
@@ -137,9 +137,9 @@
     }
     
     .page-header-admin p {
-        font-size: 0.875rem;
+        font-size: 0.875rem !important;
         margin-bottom: 0 !important;
-        color: rgba(255, 255, 255, 0.9);
+        color: rgba(255, 255, 255, 0.9) !important;
     }
     
     .page-header-admin h1 i {
@@ -147,14 +147,23 @@
     }
     
     .page-header-admin .btn-light {
-        background-color: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.3);
-        color: #ffffff;
+        background-color: rgba(255, 255, 255, 0.2) !important;
+        border-color: rgba(255, 255, 255, 0.3) !important;
+        color: #ffffff !important;
     }
     
     .page-header-admin .btn-light:hover {
-        background-color: rgba(255, 255, 255, 0.3);
-        color: #ffffff;
+        background-color: rgba(255, 255, 255, 0.3) !important;
+        color: #ffffff !important;
+    }
+    
+    /* Override any Linfox base template colors */
+    .page-header-admin * {
+        color: #ffffff !important;
+    }
+    
+    .page-header-admin p {
+        color: rgba(255, 255, 255, 0.9) !important;
     }
     
     /* Reduce table font sizes to match admin home */
