@@ -126,7 +126,7 @@ urlpatterns = [
          name="adminorderdelete"),
 
     #Linfox
-#     path("linfox-login/", LinfoxLoginView.as_view(), name="linfoxlogin"),
+    path("linfox-login/", LinfoxLoginView.as_view(), name="linfoxlogin"),
     path("linfox-home/", LinfoxHomeView.as_view(), name="linfoxhome"),
     path("linfox-cargo/list/", LinfoxCargoListView.as_view(), name="linfoxcargolist"),
     path("linfox-cargo/add/",  LinfoxCargoCreateView.as_view(), name="linfoxproductcreate"),

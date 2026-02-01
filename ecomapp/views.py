@@ -985,15 +985,15 @@ class LinfoxLoginView(FormView):
         uname = form.cleaned_data.get("username")
         pword = form.cleaned_data["password"]
         usr = authenticate(username=uname, password=pword)
-        if usr is not None and Admin.objects.filter(user=usr).exists():
+        if usr is not None and LinfoxUser.objects.filter(user=usr).exists():
             login(self.request, usr)
         else:
-            return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials"})
+            return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials or you are not a Linfox user"})
         return super().form_valid(form)
 
 class LinfoxRequiredMixin(object):
     def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated and Admin.objects.filter(user=request.user).exists():
+        if request.user.is_authenticated and LinfoxUser.objects.filter(user=request.user).exists():
             pass
         else:
             return redirect("/linfox-login/")
