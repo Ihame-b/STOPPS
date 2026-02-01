@@ -6,3 +6,4 @@ django-jazzmin
 gunicorn
 whitenoise
 psycopg2-binary
+dj-database-url>=2.0.0
