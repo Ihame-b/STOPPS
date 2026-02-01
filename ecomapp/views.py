@@ -696,6 +696,16 @@ class PasswordResetView(FormView):
 
 
 class AdminLoginView(FormView):
+    """
+    Unified Admin Login View
+    
+    Accepts both Super Admin (Admin) and Linfox User (LinfoxUser) logins.
+    Both user types can login from this page and have the same access level.
+    
+    Redirects:
+    - LinfoxUser → /linfox-home/
+    - Super Admin (Admin) → /admin-home/
+    """
     template_name = "adminpages/adminlogin.html"
     form_class = CustomerLoginForm
     success_url = reverse_lazy("ecomapp:adminhome")
@@ -705,13 +715,14 @@ class AdminLoginView(FormView):
         pword = form.cleaned_data["password"]
         usr = authenticate(username=uname, password=pword)
         if usr is not None:
-            # Check if user is Admin or LinfoxUser
+            # Check if user is Super Admin (Admin) or Linfox User (LinfoxUser)
+            # Both are admin users with the same access level
             is_admin = Admin.objects.filter(user=usr).exists()
             is_linfox = LinfoxUser.objects.filter(user=usr).exists()
             
             if is_admin or is_linfox:
                 login(self.request, usr)
-                # Redirect based on user type
+                # Redirect based on user type (LinfoxUser takes priority if both exist)
                 if is_linfox:
                     return redirect("ecomapp:linfoxhome")
                 elif is_admin:
@@ -724,9 +735,16 @@ class AdminLoginView(FormView):
 
 
 class AdminRequiredMixin(object):
+    """
+    Access Control Mixin for Admin Pages
+    
+    Allows both Super Admin (Admin) and Linfox User (LinfoxUser) to access admin pages.
+    Both user types have the same access level.
+    """
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            # Allow both Admin and LinfoxUser
+            # Allow both Super Admin (Admin) and Linfox User (LinfoxUser)
+            # Both are admin users with the same access level
             is_admin = Admin.objects.filter(user=request.user).exists()
             is_linfox = LinfoxUser.objects.filter(user=request.user).exists()
             if is_admin or is_linfox:
@@ -995,6 +1013,16 @@ class AdminOrderDeleteView(AdminRequiredMixin, DeleteView):
 #Linfox Page
 
 class LinfoxLoginView(FormView):
+    """
+    Unified Linfox Login View
+    
+    Accepts both Super Admin (Admin) and Linfox User (LinfoxUser) logins.
+    Both user types can login from this page and have the same access level.
+    
+    Redirects:
+    - LinfoxUser → /linfox-home/
+    - Super Admin (Admin) → /admin-home/
+    """
     template_name = "linfox/linfoxlogin.html"
     form_class = CustomerLoginForm
     success_url = reverse_lazy("ecomapp:linfoxhome")
@@ -1004,13 +1032,14 @@ class LinfoxLoginView(FormView):
         pword = form.cleaned_data["password"]
         usr = authenticate(username=uname, password=pword)
         if usr is not None:
-            # Check if user is Admin or LinfoxUser
+            # Check if user is Super Admin (Admin) or Linfox User (LinfoxUser)
+            # Both are admin users with the same access level
             is_admin = Admin.objects.filter(user=usr).exists()
             is_linfox = LinfoxUser.objects.filter(user=usr).exists()
             
             if is_admin or is_linfox:
                 login(self.request, usr)
-                # Redirect based on user type
+                # Redirect based on user type (LinfoxUser takes priority if both exist)
                 if is_linfox:
                     return redirect("ecomapp:linfoxhome")
                 elif is_admin:
@@ -1022,9 +1051,16 @@ class LinfoxLoginView(FormView):
         return super().form_valid(form)
 
 class LinfoxRequiredMixin(object):
+    """
+    Access Control Mixin for Linfox Pages
+    
+    Allows both Super Admin (Admin) and Linfox User (LinfoxUser) to access Linfox pages.
+    Both user types have the same access level.
+    """
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            # Allow both Admin and LinfoxUser
+            # Allow both Super Admin (Admin) and Linfox User (LinfoxUser)
+            # Both are admin users with the same access level
             is_admin = Admin.objects.filter(user=request.user).exists()
             is_linfox = LinfoxUser.objects.filter(user=request.user).exists()
             if is_admin or is_linfox:

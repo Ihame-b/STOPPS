@@ -5,6 +5,18 @@ from django.contrib.auth.models import User
 
 
 class Admin(models.Model):
+    """
+    Super Admin Model
+    
+    Represents the main administrative users with full system access.
+    These users can access all admin pages and Linfox pages.
+    
+    Note: There are two types of admin users:
+    1. Super Admin (this model) - General system administrators
+    2. LinfoxUser - Linfox-specific administrators (also has admin access)
+    
+    Both can login from /admin-login/ or /linfox-login/ and have the same access level.
+    """
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     full_name = models.CharField(max_length=50)
     image = models.ImageField(upload_to="admins")
@@ -26,6 +38,19 @@ class Admin(models.Model):
         return f'{self.user}'
 
 class LinfoxUser(models.Model):
+    """
+    Linfox User Model (Admin)
+    
+    Represents Linfox-specific administrative users.
+    These users have admin access and can access all admin pages and Linfox pages.
+    
+    Note: There are two types of admin users:
+    1. Super Admin (Admin model) - General system administrators
+    2. LinfoxUser (this model) - Linfox-specific administrators (also has admin access)
+    
+    Both can login from /admin-login/ or /linfox-login/ and have the same access level.
+    A user can have both Admin and LinfoxUser profiles simultaneously.
+    """
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     full_name = models.CharField(max_length=50)
     image = models.ImageField(upload_to="linfox")
