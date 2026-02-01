@@ -697,14 +697,14 @@ class PasswordResetView(FormView):
 
 class AdminLoginView(FormView):
     """
-    Unified Admin Login View
+    Super Admin Login View
     
-    Accepts both Super Admin (Admin) and Linfox User (LinfoxUser) logins.
-    Both user types can login from this page and have the same access level.
+    Only Super Admin (Admin) users can login from this page.
+    LinfoxUser should use the Linfox login page instead.
     
     Redirects:
-    - LinfoxUser → /linfox-home/
     - Super Admin (Admin) → /admin-home/
+    - LinfoxUser → Error message and redirect to Linfox login
     """
     template_name = "adminpages/adminlogin.html"
     form_class = CustomerLoginForm
@@ -715,42 +715,53 @@ class AdminLoginView(FormView):
         pword = form.cleaned_data["password"]
         usr = authenticate(username=uname, password=pword)
         if usr is not None:
-            # Check if user is Super Admin (Admin) or Linfox User (LinfoxUser)
-            # Both are admin users with the same access level
             is_admin = Admin.objects.filter(user=usr).exists()
             is_linfox = LinfoxUser.objects.filter(user=usr).exists()
             
-            if is_admin or is_linfox:
+            if is_admin:
+                # Super Admin can login and access admin dashboard
                 login(self.request, usr)
-                # Redirect based on user type (LinfoxUser takes priority if both exist)
-                if is_linfox:
-                    return redirect("ecomapp:linfoxhome")
-                elif is_admin:
-                    return redirect("ecomapp:adminhome")
+                return redirect("ecomapp:adminhome")
+            elif is_linfox:
+                # LinfoxUser should use Linfox login page
+                return render(self.request, self.template_name, {
+                    "form": self.form_class, 
+                    "error": "Linfox users should login from the Linfox login page. Please use /linfox-login/ instead."
+                })
             else:
-                return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials or you are not authorized"})
+                return render(self.request, self.template_name, {
+                    "form": self.form_class, 
+                    "error": "Invalid credentials or you are not authorized to access the admin dashboard."
+                })
         else:
-            return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials"})
+            return render(self.request, self.template_name, {
+                "form": self.form_class, 
+                "error": "Invalid credentials"
+            })
         return super().form_valid(form)
 
 
 class AdminRequiredMixin(object):
     """
-    Access Control Mixin for Admin Pages
+    Access Control Mixin for Admin Pages (Super Admin Dashboard)
     
-    Allows both Super Admin (Admin) and Linfox User (LinfoxUser) to access admin pages.
-    Both user types have the same access level.
+    Only Super Admin (Admin) users can access admin pages.
+    LinfoxUser cannot access admin pages - they can only access Linfox dashboard.
     """
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
-            # Allow both Super Admin (Admin) and Linfox User (LinfoxUser)
-            # Both are admin users with the same access level
+            # Only allow Super Admin (Admin) users
             is_admin = Admin.objects.filter(user=request.user).exists()
-            is_linfox = LinfoxUser.objects.filter(user=request.user).exists()
-            if is_admin or is_linfox:
+            if is_admin:
                 pass
             else:
-                return redirect("/admin-login/")
+                # If LinfoxUser tries to access admin pages, redirect to Linfox dashboard
+                is_linfox = LinfoxUser.objects.filter(user=request.user).exists()
+                if is_linfox:
+                    messages.error(request, "You don't have permission to access the admin dashboard. Please use the Linfox dashboard.")
+                    return redirect("/linfox-home/")
+                else:
+                    return redirect("/admin-login/")
         else:
             return redirect("/admin-login/")
         return super().dispatch(request, *args, **kwargs)
@@ -1014,14 +1025,14 @@ class AdminOrderDeleteView(AdminRequiredMixin, DeleteView):
 
 class LinfoxLoginView(FormView):
     """
-    Unified Linfox Login View
+    Linfox Login View
     
     Accepts both Super Admin (Admin) and Linfox User (LinfoxUser) logins.
-    Both user types can login from this page and have the same access level.
+    Admin users can access everything, so they can login here too.
     
     Redirects:
-    - LinfoxUser → /linfox-home/
-    - Super Admin (Admin) → /admin-home/
+    - LinfoxUser → /linfox-home/ (their only accessible dashboard)
+    - Super Admin (Admin) → /admin-home/ (default dashboard, but can access Linfox pages too)
     """
     template_name = "linfox/linfoxlogin.html"
     form_class = CustomerLoginForm
@@ -1032,22 +1043,28 @@ class LinfoxLoginView(FormView):
         pword = form.cleaned_data["password"]
         usr = authenticate(username=uname, password=pword)
         if usr is not None:
-            # Check if user is Super Admin (Admin) or Linfox User (LinfoxUser)
-            # Both are admin users with the same access level
             is_admin = Admin.objects.filter(user=usr).exists()
             is_linfox = LinfoxUser.objects.filter(user=usr).exists()
             
-            if is_admin or is_linfox:
+            if is_admin:
+                # Admin users can login from Linfox login and access everything
+                # Redirect to admin home (default), but they can still access Linfox pages
                 login(self.request, usr)
-                # Redirect based on user type (LinfoxUser takes priority if both exist)
-                if is_linfox:
-                    return redirect("ecomapp:linfoxhome")
-                elif is_admin:
-                    return redirect("ecomapp:adminhome")
+                return redirect("ecomapp:adminhome")
+            elif is_linfox:
+                # LinfoxUser can only access Linfox dashboard
+                login(self.request, usr)
+                return redirect("ecomapp:linfoxhome")
             else:
-                return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials or you are not authorized"})
+                return render(self.request, self.template_name, {
+                    "form": self.form_class, 
+                    "error": "Invalid credentials or you are not authorized"
+                })
         else:
-            return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials"})
+            return render(self.request, self.template_name, {
+                "form": self.form_class, 
+                "error": "Invalid credentials"
+            })
         return super().form_valid(form)
 
 class LinfoxRequiredMixin(object):
@@ -1055,12 +1072,13 @@ class LinfoxRequiredMixin(object):
     Access Control Mixin for Linfox Pages
     
     Allows both Super Admin (Admin) and Linfox User (LinfoxUser) to access Linfox pages.
-    Both user types have the same access level.
+    Admin users can access everything, including Linfox dashboard.
+    LinfoxUser can only access Linfox dashboard.
     """
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
             # Allow both Super Admin (Admin) and Linfox User (LinfoxUser)
-            # Both are admin users with the same access level
+            # Admin users can access everything, LinfoxUser can only access Linfox pages
             is_admin = Admin.objects.filter(user=request.user).exists()
             is_linfox = LinfoxUser.objects.filter(user=request.user).exists()
             if is_admin or is_linfox:
