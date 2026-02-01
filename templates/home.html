@@ -13,6 +13,52 @@
 </div>
 
 <div class="container">
+    <!-- Login Section -->
+    {% if not user.is_authenticated %}
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <h5 class="mb-4 text-center" style="font-size: 1.25rem; font-weight: 600;">
+                        <i class="fas fa-sign-in-alt me-2" style="color: var(--primary-color);"></i>Login to Your Account
+                    </h5>
+                    <p class="text-center text-muted mb-4">Select your account type to continue</p>
+                    <div class="row g-3">
+                        <div class="col-md-3 col-sm-6">
+                            <a href="{% url 'ecomapp:customerlogin' %}" class="btn btn-modern btn-modern-primary w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                <i class="fas fa-user fa-2x mb-2"></i>
+                                <span>Customer</span>
+                                <small class="text-muted mt-1">Shop & Order</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="{% url 'ecomapp:productOwnerlogin' %}" class="btn btn-modern btn-modern-success w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                <i class="fas fa-store fa-2x mb-2"></i>
+                                <span>Product Owner</span>
+                                <small class="text-muted mt-1">Manage Products</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="{% url 'ecomapp:adminlogin' %}" class="btn btn-modern btn-modern-info w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                <i class="fas fa-user-shield fa-2x mb-2"></i>
+                                <span>Admin</span>
+                                <small class="text-muted mt-1">Super Admin</small>
+                            </a>
+                        </div>
+                        <div class="col-md-3 col-sm-6">
+                            <a href="{% url 'ecomapp:linfoxlogin' %}" class="btn btn-modern btn-modern-warning w-100 h-100 d-flex flex-column align-items-center justify-content-center py-3">
+                                <i class="fas fa-truck fa-2x mb-2"></i>
+                                <span>Linfox User</span>
+                                <small class="text-muted mt-1">Transport & Cargo</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Products Section -->
     <div class="row mb-4">
         <div class="col-12">
@@ -109,4 +155,50 @@
     </div>
     {% endif %}
 </div>
+
+<style>
+    /* Login Section Styling */
+    .login-section-card {
+        border-radius: 16px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .login-section-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+    
+    .login-btn-card {
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        min-height: 140px;
+        border: 2px solid transparent;
+    }
+    
+    .login-btn-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        border-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    .login-btn-card i {
+        transition: transform 0.3s ease;
+    }
+    
+    .login-btn-card:hover i {
+        transform: scale(1.1);
+    }
+    
+    .btn-modern-warning {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: white;
+        border: none;
+    }
+    
+    .btn-modern-warning:hover {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        color: white;
+    }
+</style>
 {% endblock %}
