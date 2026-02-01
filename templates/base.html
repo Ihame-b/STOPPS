@@ -236,6 +236,18 @@
       color: rgba(255, 255, 255, 0.6);
     }
 
+    /* Footer Login Buttons */
+    .footer-modern .btn-sm {
+      transition: all 0.3s ease;
+      font-size: 0.85rem;
+    }
+
+    .footer-modern .btn-sm:hover {
+      background-color: rgba(255, 255, 255, 0.2) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
     /* Responsive adjustments - Mobile */
     @media (max-width: 768px) {
       .navbar-modern {
@@ -446,18 +458,20 @@
             </button>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="loginDropdown">
               <li><a class="dropdown-item" href="{% url 'ecomapp:customerlogin' %}">
-                <i class="fas fa-user me-2"></i>As Customer
-              </a></li>
+                  <i class="fas fa-user me-2"></i>As Customer
+                </a></li>
               <li><a class="dropdown-item" href="{% url 'ecomapp:productOwnerlogin' %}">
-                <i class="fas fa-store me-2"></i>As Product Owner
-              </a></li>
-              <li><hr class="dropdown-divider"></li>
+                  <i class="fas fa-store me-2"></i>As Product Owner
+                </a></li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
               <li><a class="dropdown-item" href="{% url 'ecomapp:adminlogin' %}">
-                <i class="fas fa-user-shield me-2"></i>As Admin
-              </a></li>
+                  <i class="fas fa-user-shield me-2"></i>As Admin
+                </a></li>
               <li><a class="dropdown-item" href="{% url 'ecomapp:linfoxlogin' %}">
-                <i class="fas fa-truck me-2"></i>As Linfox User
-              </a></li>
+                  <i class="fas fa-truck me-2"></i>As Linfox User
+                </a></li>
             </ul>
           </div>
           {% endif %}
@@ -536,6 +550,32 @@
           </ul>
         </div>
       </div>
+      <!-- Login Section in Footer -->
+      {% if not user.is_authenticated %}
+      <div class="row mt-4 pt-3" style="border-top: 1px solid rgba(255, 255, 255, 0.1);">
+        <div class="col-12">
+          <div class="text-center mb-3">
+            <h6 style="color: rgba(255, 255, 255, 0.9); font-size: 0.9rem; margin-bottom: 0.75rem;">
+              <i class="fas fa-sign-in-alt me-2"></i>Login Options
+            </h6>
+          </div>
+          <div class="d-flex flex-wrap justify-content-center gap-2" style="font-size: 0.85rem;">
+            <a href="{% url 'ecomapp:customerlogin' %}" class="btn btn-sm" style="background-color: rgba(255, 255, 255, 0.1); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0.35rem 0.75rem;">
+              <i class="fas fa-user me-1"></i>Customer
+            </a>
+            <a href="{% url 'ecomapp:productOwnerlogin' %}" class="btn btn-sm" style="background-color: rgba(255, 255, 255, 0.1); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0.35rem 0.75rem;">
+              <i class="fas fa-store me-1"></i>Product Owner
+            </a>
+            <a href="{% url 'ecomapp:adminlogin' %}" class="btn btn-sm" style="background-color: rgba(255, 255, 255, 0.1); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0.35rem 0.75rem;">
+              <i class="fas fa-user-shield me-1"></i>Admin
+            </a>
+            <a href="{% url 'ecomapp:linfoxlogin' %}" class="btn btn-sm" style="background-color: rgba(255, 255, 255, 0.1); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.2); padding: 0.35rem 0.75rem;">
+              <i class="fas fa-truck me-1"></i>Linfox User
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
       <div class="copyright">
         <p class="mb-0">&copy; {% now "Y" %} STOPPS. All rights reserved.</p>
       </div>
