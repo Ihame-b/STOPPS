@@ -144,7 +144,7 @@ class LinfoxImage(models.Model):
 class CartProduct(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    cargo = models.ForeignKey(Cargo, on_delete=models.CASCADE,blank=True,null=True, default=Cargo.objects.first().pk )
+    cargo = models.ForeignKey(Cargo, on_delete=models.CASCADE, blank=True, null=True)
     # driver= models.ForeignKey(Cargo.driverName,max_length=300,on_delete=models.CASCADE, default=Cargo.objects.first().pk)
 
     rate = models.PositiveIntegerField()

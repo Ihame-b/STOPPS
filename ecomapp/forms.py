@@ -1,4 +1,4 @@
-from .models import Cargo, Order, Customer, Product, ProductOwner
+from .models import Cargo, Order, Customer, Product, ProductOwner, Category
 from django.contrib.auth.models import User
 from django import forms
 
@@ -29,20 +29,52 @@ class CustomerRegistrationForm(forms.ModelForm):
 
 
 class productOwnerRegistrationForm(forms.ModelForm):
-    username = forms.CharField(widget=forms.TextInput())
-    password = forms.CharField(widget=forms.PasswordInput())
-    email = forms.CharField(widget=forms.EmailInput())
+    username = forms.CharField(
+        widget=forms.TextInput(attrs={
+            "class": "form-control",
+            "placeholder": "Enter your username"
+        })
+    )
+    password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            "class": "form-control",
+            "placeholder": "Enter your password"
+        })
+    )
+    email = forms.CharField(
+        widget=forms.EmailInput(attrs={
+            "class": "form-control",
+            "placeholder": "Enter your email"
+        })
+    )
 
     class Meta:
         model = ProductOwner
-        fields = ["username", "password", "email", "full_name","mobile"]
+        fields = ["username", "password", "email", "full_name", "mobile", "image"]
+        widgets = {
+            "full_name": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your full name"
+            }),
+            "mobile": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your mobile number"
+            }),
+            "image": forms.ClearableFileInput(attrs={
+                "class": "form-control"
+            })
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make image field optional
+        self.fields['image'].required = False
 
     def clean_username(self):
         uname = self.cleaned_data.get("username")
         if User.objects.filter(username=uname).exists():
             raise forms.ValidationError(
                 "ProductOwner with this username already exists.")
-
         return uname        
 
 
@@ -113,32 +145,35 @@ class CargoForm(forms.ModelForm):
     more_images = forms.FileField(required=False, widget=MultiFileInput(attrs={"class": "form-control"}))
     class Meta:
         model = Cargo
-        fields = ["CampanyName","driverName", "address",  "image", "price",]
+        fields = ["CampanyName", "driverName", "address", "image", "price", "cargo_status"]
         widgets = {
-            "CampanyName": forms.TextInput(attrs={
-                "class": "form-control",
-                "placeholder": "Enter the Company name here..."
+            "CampanyName": forms.Select(attrs={
+                "class": "form-control"
             }),
-             "DriverName": forms.TextInput(attrs={
+            "driverName": forms.TextInput(attrs={
                 "class": "form-control",
                 "placeholder": "Enter the Driver name here..."
             }),
             "address": forms.TextInput(attrs={
                 "class": "form-control",
-                "placeholder": "Enter the your address eg: kk 310st..."
-            }),
-            "category": forms.Select(attrs={
-                "class": "form-control"
+                "placeholder": "Enter the address eg: kk 310st..."
             }),
             "image": forms.ClearableFileInput(attrs={
                 "class": "form-control"
             }),
             "price": forms.NumberInput(attrs={
                 "class": "form-control",
-                "placeholder": "Marked price of the product..."
+                "placeholder": "Enter the price..."
             }),
-
+            "cargo_status": forms.Select(attrs={
+                "class": "form-control"
+            }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make image field optional
+        self.fields['image'].required = False
 
 
 
@@ -254,4 +289,20 @@ class UserProfileForm(forms.ModelForm):
 	class Meta:
 		model = Admin
 		fields = ('address', 'town', 'county', 'post_code',
-		 'country', 'longitude', 'latitude')        
+		 'country', 'longitude', 'latitude')
+
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ["title", "slug"]
+        widgets = {
+            "title": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter category title (e.g., Electronics, Clothing)"
+            }),
+            "slug": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter unique slug (e.g., electronics, clothing)"
+            })
+        }        

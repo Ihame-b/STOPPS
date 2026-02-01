@@ -1,0 +1,33 @@
+===========================================
+  YOUR DJANGO PROJECT IS READY TO RUN
+===========================================
+
+The server has been started and is running at:
+  http://127.0.0.1:8000/
+  http://localhost:8000/
+
+TO START THE SERVER YOURSELF:
+-----------------------------
+1. Open terminal in this directory
+2. Run: python3 manage.py runserver
+3. Open browser: http://127.0.0.1:8000/
+
+OR use the script:
+  ./run_server.sh
+
+IMPORTANT URLS:
+---------------
+Home:        http://127.0.0.1:8000/
+Admin:       http://127.0.0.1:8000/admin/
+Products:    http://127.0.0.1:8000/all-products/
+
+TO STOP THE SERVER:
+-------------------
+Press Ctrl+C in the terminal where it's running
+
+OR kill it:
+  pkill -f "manage.py runserver"
+
+===========================================
+Everything is configured and working!
+===========================================

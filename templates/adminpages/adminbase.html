@@ -49,15 +49,16 @@
         .admin-navbar .navbar-brand {
             font-family: 'Poppins', sans-serif;
             font-weight: 700;
-            font-size: 1.5rem;
+            font-size: 1.1rem;
             color: #ffffff !important;
         }
 
         .admin-navbar .nav-link {
             color: rgba(255, 255, 255, 0.9) !important;
             font-weight: 500;
-            padding: 0.5rem 1rem !important;
-            margin: 0 0.25rem;
+            font-size: 0.875rem;
+            padding: 0.4rem 0.75rem !important;
+            margin: 0 0.15rem;
             border-radius: 8px;
             transition: all 0.3s ease;
         }
@@ -141,9 +142,19 @@
         .page-header-admin {
             background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
             color: #ffffff;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
+            padding: 1rem 0;
+            margin-bottom: 1.5rem;
             border-radius: 0 0 24px 24px;
+        }
+        
+        .page-header-admin h1 {
+            font-size: 1.5rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        .page-header-admin p {
+            font-size: 0.875rem;
+            margin-bottom: 0 !important;
         }
     </style>
 </head>
@@ -182,6 +193,11 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{% url 'ecomapp:admincategorylist' %}">
+                            <i class="fas fa-tags me-1"></i>Categories
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'ecomapp:linfoxcargolist' %}">
                             <i class="fas fa-truck me-1"></i>Transport
                         </a>
@@ -201,14 +217,14 @@
                     </li>
                 </ul>
                 
-                <form class="d-flex me-3" action="{% url 'ecomapp:search' %}" method="GET">
-                    <input name="keyword" class="form-control form-control-sm" type="search" placeholder="Search..." style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;" required>
-                    <button class="btn btn-sm btn-light ms-2" type="submit">
+                <form class="d-flex me-3" action="{% url 'ecomapp:search' %}" method="GET" style="min-width: 200px;">
+                    <input name="keyword" class="form-control form-control-sm" type="search" placeholder="Search..." style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 0.875rem; width: 180px;" required>
+                    <button class="btn btn-sm btn-light ms-2" type="submit" style="font-size: 0.875rem;">
                         <i class="fas fa-search"></i>
                     </button>
                 </form>
 
-                <a href="{% url 'ecomapp:customerlogout' %}" class="btn btn-nav">
+                <a href="{% url 'ecomapp:customerlogout' %}" class="btn btn-nav ms-4">
                     <i class="fas fa-sign-out-alt me-1"></i>Logout
                 </a>
             </div>

@@ -1,0 +1,88 @@
+{% extends 'adminpages/adminbase.html' %}
+{% load static %}
+
+{% block title %}All Categories - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-admin">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2" style="color: #ffffff;">
+                    <i class="fas fa-tags me-2"></i>All Categories
+                </h1>
+                <p class="mb-0" style="color: rgba(255, 255, 255, 0.9);">Manage product categories</p>
+            </div>
+            <a href="{% url 'ecomapp:admincategorycreate' %}" class="btn btn-light">
+                <i class="fas fa-plus-circle me-2"></i>Add New Category
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    {% if categories %}
+    <div class="card-modern">
+        <div class="card-body p-4">
+            <div class="table-responsive">
+                <table class="table table-modern">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Category Title</th>
+                            <th>Slug</th>
+                            <th>Products Count</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for category in categories %}
+                        <tr>
+                            <td>{{forloop.counter}}</td>
+                            <td>
+                                <strong>{{category.title}}</strong>
+                            </td>
+                            <td>
+                                <code class="text-muted">{{category.slug}}</code>
+                            </td>
+                            <td>
+                                <span class="badge" style="background-color: var(--info-color); color: white;">
+                                    <i class="fas fa-box me-1"></i>{{category.product_set.count}}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'ecomapp:admincategoryedit' category.id %}" 
+                                       class="btn btn-sm btn-outline-primary"
+                                       title="Edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'ecomapp:admincategorydelete' category.id %}" 
+                                       class="btn btn-sm btn-outline-danger"
+                                       title="Delete"
+                                       onclick="return confirm('Are you sure you want to delete {{category.title}}? This action cannot be undone.');">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card-modern">
+        <div class="card-body p-5 text-center">
+            <i class="fas fa-tags fa-4x text-muted mb-3"></i>
+            <h4 class="text-muted">No Categories Found</h4>
+            <p class="text-muted">Get started by creating your first category.</p>
+            <a href="{% url 'ecomapp:admincategorycreate' %}" class="btn btn-modern btn-modern-primary">
+                <i class="fas fa-plus-circle me-2"></i>Add First Category
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

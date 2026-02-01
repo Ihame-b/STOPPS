@@ -68,6 +68,19 @@ urlpatterns = [
     path("admin-product/delete/<int:pk>/", AdminProductDeleteView.as_view(),
          name="adminproductdelete"),
 
+    # Category Management
+    path("admin-category/list/", AdminCategoryListView.as_view(),
+         name="admincategorylist"),
+
+    path("admin-category/add/", AdminCategoryCreateView.as_view(),
+         name="admincategorycreate"),
+
+    path("admin-category/edit/<int:pk>/", AdminCategoryUpdateView.as_view(),
+         name="admincategoryedit"),
+
+    path("admin-category/delete/<int:pk>/", AdminCategoryDeleteView.as_view(),
+         name="admincategorydelete"),
+
     # Product Owner Management
     path("admin-productowner/list/", AdminProductOwnerListView.as_view(),
          name="adminproductownerlist"),

@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Product Owner Registration - STOPPS{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card-modern">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-store fa-3x text-success mb-3"></i>
+                        <h2 class="mb-2">Register as Product Owner</h2>
+                        <p class="text-muted">Start selling your products on STOPPS</p>
+                    </div>
+
+                    <form method="POST" class="form-modern" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.username.id_for_label }}" class="form-label">
+                                    <i class="fas fa-user me-1"></i>Username <span class="text-danger">*</span>
+                                </label>
+                                {{ form.username }}
+                                {% if form.username.errors %}
+                                <div class="text-danger small mt-1">{{ form.username.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">
+                                    <i class="fas fa-envelope me-1"></i>Email <span class="text-danger">*</span>
+                                </label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.password.id_for_label }}" class="form-label">
+                                    <i class="fas fa-lock me-1"></i>Password <span class="text-danger">*</span>
+                                </label>
+                                {{ form.password }}
+                                {% if form.password.errors %}
+                                <div class="text-danger small mt-1">{{ form.password.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.full_name.id_for_label }}" class="form-label">
+                                    <i class="fas fa-id-card me-1"></i>Full Name <span class="text-danger">*</span>
+                                </label>
+                                {{ form.full_name }}
+                                {% if form.full_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.full_name.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.mobile.id_for_label }}" class="form-label">
+                                    <i class="fas fa-phone me-1"></i>Mobile Number <span class="text-danger">*</span>
+                                </label>
+                                {{ form.mobile }}
+                                {% if form.mobile.errors %}
+                                <div class="text-danger small mt-1">{{ form.mobile.errors }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="{{ form.image.id_for_label }}" class="form-label">
+                                    <i class="fas fa-image me-1"></i>Profile Image
+                                </label>
+                                {{ form.image }}
+                                {% if form.image.errors %}
+                                <div class="text-danger small mt-1">{{ form.image.errors }}</div>
+                                {% endif %}
+                                <small class="text-muted">Optional: Upload your profile picture</small>
+                            </div>
+                        </div>
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger mt-3">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-modern btn-modern-success btn-lg">
+                                <i class="fas fa-store me-2"></i>Register as Product Owner
+                            </button>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+
+                    <div class="text-center">
+                        <p class="mb-0 text-muted">Already have an account?</p>
+                        <a href="{% url 'ecomapp:productOwnerlogin' %}" class="btn btn-outline-success mt-2">
+                            <i class="fas fa-sign-in-alt me-2"></i>Login Here
+                        </a>
+                    </div>
+
+                    <div class="text-center mt-3">
+                        <p class="mb-0 text-muted">Want to shop instead?</p>
+                        <a href="{% url 'ecomapp:customerregistration' %}" class="btn btn-outline-primary btn-sm mt-2">
+                            <i class="fas fa-shopping-cart me-2"></i>Register as Customer
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-modern input,
+    .form-modern select,
+    .form-modern input[type="file"] {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 1rem;
+    }
+
+    .form-modern input:focus,
+    .form-modern select:focus {
+        border-color: var(--success-color);
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        outline: none;
+    }
+
+    .btn-modern-success {
+        background: linear-gradient(135deg, var(--success-color) 0%, #16a34a 100%);
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-modern-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        color: white;
+    }
+</style>
+{% endblock %}

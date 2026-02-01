@@ -1,0 +1,86 @@
+{% extends 'adminpages/adminbase.html' %}
+{% load static %}
+
+{% block title %}Add Category - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header-admin">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2" style="color: #ffffff;">
+                    <i class="fas fa-plus-circle me-2"></i>Add New Category
+                </h1>
+                <p class="mb-0" style="color: rgba(255, 255, 255, 0.9);">Create a new product category</p>
+            </div>
+            <a href="{% url 'ecomapp:admincategorylist' %}" class="btn btn-light">
+                <i class="fas fa-arrow-left me-2"></i>Back to Categories
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card-modern">
+                <div class="card-body p-4">
+                    <form method="POST" class="form-modern">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">
+                                <i class="fas fa-tag me-1"></i>Category Title <span class="text-danger">*</span>
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                            <div class="text-danger small mt-1">{{ form.title.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">e.g., Electronics, Clothing, Food & Beverages</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.slug.id_for_label }}" class="form-label">
+                                <i class="fas fa-link me-1"></i>Slug <span class="text-danger">*</span>
+                            </label>
+                            {{ form.slug }}
+                            {% if form.slug.errors %}
+                            <div class="text-danger small mt-1">{{ form.slug.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">URL-friendly version (e.g., electronics, clothing). Use lowercase letters, numbers, and hyphens only.</small>
+                        </div>
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                        {% endif %}
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'ecomapp:admincategorylist' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-modern btn-modern-primary">
+                                <i class="fas fa-save me-2"></i>Create Category
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-generate slug from title
+    document.getElementById('id_title').addEventListener('input', function() {
+        const title = this.value;
+        const slug = title.toLowerCase()
+            .trim()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        document.getElementById('id_slug').value = slug;
+    });
+</script>
+{% endblock %}

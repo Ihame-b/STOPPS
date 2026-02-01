@@ -34,28 +34,168 @@ from .forms import (
 
 class EcomMixin(object):
     def dispatch(self, request, *args, **kwargs):
-        cart_id = request.session.get("cart_id")
-        if cart_id:
-            cart_obj = Cart.objects.get(id=cart_id)
-            if request.user.is_authenticated:
-            #     cart_obj.customer = request.user.customer
-             cart_obj.save()
-        return super().dispatch(request, *args, **kwargs)
+        # #region agent log
+        import json
+        from pathlib import Path
+        try:
+            log_path = Path(__file__).parent.parent / '.cursor' / 'debug.log'
+            with open(log_path, 'a') as f:
+                f.write(json.dumps({
+                    'sessionId': 'debug-session',
+                    'runId': 'ecom-mixin',
+                    'hypothesisId': 'F',
+                    'location': 'views.py:37',
+                    'message': 'EcomMixin.dispatch entry',
+                    'data': {'path': request.path, 'method': request.method},
+                    'timestamp': int(__import__('time').time() * 1000)
+                }) + '\n')
+        except Exception:
+            pass
+        # #endregion
+        try:
+            cart_id = request.session.get("cart_id")
+            if cart_id:
+                # #region agent log
+                try:
+                    log_path = Path(__file__).parent.parent / '.cursor' / 'debug.log'
+                    with open(log_path, 'a') as f:
+                        f.write(json.dumps({
+                            'sessionId': 'debug-session',
+                            'runId': 'ecom-mixin',
+                            'hypothesisId': 'F',
+                            'location': 'views.py:50',
+                            'message': 'Cart found, getting cart object',
+                            'data': {'cart_id': cart_id},
+                            'timestamp': int(__import__('time').time() * 1000)
+                        }) + '\n')
+                except Exception:
+                    pass
+                # #endregion
+                cart_obj = Cart.objects.get(id=cart_id)
+                if request.user.is_authenticated:
+                #     cart_obj.customer = request.user.customer
+                 cart_obj.save()
+            return super().dispatch(request, *args, **kwargs)
+        except Exception as e:
+            # #region agent log
+            import traceback
+            try:
+                log_path = Path(__file__).parent.parent / '.cursor' / 'debug.log'
+                with open(log_path, 'a') as f:
+                    f.write(json.dumps({
+                        'sessionId': 'debug-session',
+                        'runId': 'ecom-mixin',
+                        'hypothesisId': 'F',
+                        'location': 'views.py:65',
+                        'message': 'EcomMixin.dispatch error',
+                        'data': {'error': str(e), 'error_type': type(e).__name__, 'traceback': traceback.format_exc()},
+                        'timestamp': int(__import__('time').time() * 1000)
+                    }) + '\n')
+            except Exception:
+                pass
+            # #endregion
+            raise
 
 
 class HomeView(EcomMixin, TemplateView):
     template_name = "home.html"
 
     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['myname'] = "Dipak Niroula"
-        all_products = Product.objects.all().order_by("-id")
-        paginator = Paginator(all_products, 8)
-        page_number = self.request.GET.get('page')
-        print(page_number)
-        product_list = paginator.get_page(page_number)
-        context['product_list'] = product_list
-        return context
+        # #region agent log
+        import json
+        from pathlib import Path
+        try:
+            log_path = Path(__file__).parent.parent.parent / '.cursor' / 'debug.log'
+            with open(log_path, 'a') as f:
+                f.write(json.dumps({
+                    'sessionId': 'debug-session',
+                    'runId': 'home-view',
+                    'hypothesisId': 'A',
+                    'location': 'views.py:49',
+                    'message': 'HomeView.get_context_data entry',
+                    'data': {'user_authenticated': self.request.user.is_authenticated},
+                    'timestamp': int(__import__('time').time() * 1000)
+                }) + '\n')
+        except Exception:
+            pass
+        # #endregion
+        try:
+            context = super().get_context_data(**kwargs)
+            context['myname'] = "Dipak Niroula"
+            # #region agent log
+            try:
+                log_path = Path(__file__).parent.parent.parent / '.cursor' / 'debug.log'
+                with open(log_path, 'a') as f:
+                    f.write(json.dumps({
+                        'sessionId': 'debug-session',
+                        'runId': 'home-view',
+                        'hypothesisId': 'B',
+                        'location': 'views.py:56',
+                        'message': 'Before Product query',
+                        'data': {},
+                        'timestamp': int(__import__('time').time() * 1000)
+                    }) + '\n')
+            except Exception:
+                pass
+            # #endregion
+            all_products = Product.objects.all().order_by("-id")
+            # #region agent log
+            try:
+                log_path = Path(__file__).parent.parent.parent / '.cursor' / 'debug.log'
+                with open(log_path, 'a') as f:
+                    f.write(json.dumps({
+                        'sessionId': 'debug-session',
+                        'runId': 'home-view',
+                        'hypothesisId': 'B',
+                        'location': 'views.py:65',
+                        'message': 'After Product query',
+                        'data': {'product_count': all_products.count()},
+                        'timestamp': int(__import__('time').time() * 1000)
+                    }) + '\n')
+            except Exception:
+                pass
+            # #endregion
+            paginator = Paginator(all_products, 8)
+            page_number = self.request.GET.get('page')
+            print(page_number)
+            product_list = paginator.get_page(page_number)
+            # #region agent log
+            try:
+                log_path = Path(__file__).parent.parent.parent / '.cursor' / 'debug.log'
+                with open(log_path, 'a') as f:
+                    f.write(json.dumps({
+                        'sessionId': 'debug-session',
+                        'runId': 'home-view',
+                        'hypothesisId': 'C',
+                        'location': 'views.py:75',
+                        'message': 'HomeView.get_context_data success',
+                        'data': {'page_number': page_number, 'product_list_count': len(product_list)},
+                        'timestamp': int(__import__('time').time() * 1000)
+                    }) + '\n')
+            except Exception:
+                pass
+            # #endregion
+            context['product_list'] = product_list
+            return context
+        except Exception as e:
+            # #region agent log
+            import traceback
+            try:
+                log_path = Path(__file__).parent.parent.parent / '.cursor' / 'debug.log'
+                with open(log_path, 'a') as f:
+                    f.write(json.dumps({
+                        'sessionId': 'debug-session',
+                        'runId': 'home-view',
+                        'hypothesisId': 'D',
+                        'location': 'views.py:85',
+                        'message': 'HomeView.get_context_data error',
+                        'data': {'error': str(e), 'error_type': type(e).__name__, 'traceback': traceback.format_exc()},
+                        'timestamp': int(__import__('time').time() * 1000)
+                    }) + '\n')
+            except Exception:
+                pass
+            # #endregion
+            raise
 
 
 class AllProductsView(EcomMixin, TemplateView):
@@ -371,9 +511,9 @@ class EsewaVerifyView(View):
 
 
 class ProductOwnerRegistrationView(CreateView):
-    template_name = "customerregistration.html"
+    template_name = "productownerregistration.html"
     form_class = productOwnerRegistrationForm
-    success_url = reverse_lazy("ecomapp:home")
+    success_url = reverse_lazy("ecomapp:pohome")
 
     def form_valid(self, form):
         username = form.cleaned_data.get("username")
@@ -880,13 +1020,14 @@ class LinfoxCargoListView(LinfoxRequiredMixin, ListView):
 class LinfoxCargoCreateView(LinfoxRequiredMixin, CreateView):
     template_name = "linfox/linfoxproductcreate.html"
     form_class = CargoForm
-    success_url = reverse_lazy("ecomapp:linfoxproductcreate")
+    success_url = reverse_lazy("ecomapp:linfoxcargolist")
 
     def form_valid(self, form):
         p = form.save()
         images = self.request.FILES.getlist("more_images")
         for i in images:
             LinfoxImage.objects.create(cargo=p, image=i)
+        messages.success(self.request, f"Cargo '{p.CampanyName}' created successfully!")
         return super().form_valid(form)     
 
 
@@ -1121,4 +1262,50 @@ class ProductOwnerChatDetailView(productOwnerRequiredMixin, DetailView):
         # Mark messages as read
         self.object.messages.filter(is_read=False).exclude(sender=self.request.user).update(is_read=True)
         return context
+
+
+# Category Management
+class AdminCategoryListView(AdminRequiredMixin, ListView):
+    template_name = "adminpages/admincategorylist.html"
+    queryset = Category.objects.all().order_by("title")
+    context_object_name = "categories"
+
+
+class AdminCategoryCreateView(AdminRequiredMixin, CreateView):
+    template_name = "adminpages/admincategorycreate.html"
+    form_class = CategoryForm
+    success_url = reverse_lazy("ecomapp:admincategorylist")
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Category '{form.instance.title}' created successfully!")
+        return super().form_valid(form)
+
+
+class AdminCategoryUpdateView(AdminRequiredMixin, UpdateView):
+    model = Category
+    template_name = "adminpages/admincategoryedit.html"
+    form_class = CategoryForm
+    success_url = reverse_lazy("ecomapp:admincategorylist")
+    context_object_name = "category"
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Category '{form.instance.title}' updated successfully!")
+        return super().form_valid(form)
+
+
+class AdminCategoryDeleteView(AdminRequiredMixin, DeleteView):
+    model = Category
+    template_name = "adminpages/admincategorydelete.html"
+    success_url = reverse_lazy("ecomapp:admincategorylist")
+    context_object_name = "category"
+
+    def delete(self, request, *args, **kwargs):
+        category = self.get_object()
+        # Check if category has products
+        product_count = Product.objects.filter(category=category).count()
+        if product_count > 0:
+            messages.error(request, f"Cannot delete category '{category.title}' because it has {product_count} product(s) associated with it. Please reassign or delete those products first.")
+            return redirect("ecomapp:admincategorylist")
+        messages.success(request, f"Category '{category.title}' deleted successfully!")
+        return super().delete(request, *args, **kwargs)
 
