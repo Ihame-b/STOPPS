@@ -13,33 +13,210 @@
 
 <div class="container my-5">
     <div class="row g-4">
-        <!-- Profile Information -->
+        <!-- Profile Card with Image -->
         <div class="col-lg-4">
-            <div class="card-modern">
+            <div class="card-modern profile-card">
                 <div class="card-body p-4">
-                    <h3 class="mb-4">
-                        <i class="fas fa-user-circle text-primary me-2"></i>Profile Information
-                    </h3>
-                    <hr>
-                    <div class="mb-3">
-                        <strong><i class="fas fa-user me-2 text-primary"></i>Name:</strong>
-                        <p class="text-muted mb-0">{{customer.full_name}}</p>
+                    <!-- Profile Image Section -->
+                    <div class="profile-image-section text-center mb-4">
+                        {% if customer.image %}
+                            <img src="{{ customer.image.url }}" alt="{{ customer.full_name }}" class="profile-image">
+                        {% else %}
+                            <div class="profile-image-placeholder">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                        {% endif %}
+                        <div class="profile-status mt-3">
+                            <span class="status-indicator online"></span>
+                            <span class="status-text">Online</span>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <strong><i class="fas fa-at me-2 text-primary"></i>Username:</strong>
-                        <p class="text-muted mb-0">{{customer.user.username}}</p>
+                    
+                    <hr class="my-4">
+                    
+                    <!-- Profile Information -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="mb-0 text-center flex-grow-1">
+                            <i class="fas fa-user-circle text-primary me-2"></i>Profile Information
+                        </h3>
+                        <button type="button" id="editProfileBtn" class="btn btn-sm btn-primary" onclick="toggleEditMode()">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </button>
+                        <div id="editActions" style="display: none;">
+                            <button type="submit" form="profileEditForm" class="btn btn-sm btn-success me-2">
+                                <i class="fas fa-save me-1"></i>Save
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="cancelEdit()">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </button>
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <strong><i class="fas fa-envelope me-2 text-primary"></i>Email:</strong>
-                        <p class="text-muted mb-0">{{customer.user.email}}</p>
-                    </div>
-                    <div class="mb-3">
-                        <strong><i class="fas fa-map-marker-alt me-2 text-primary"></i>Address:</strong>
-                        <p class="text-muted mb-0">{{customer.address|default:"Not provided"}}</p>
-                    </div>
-                    <div class="mb-3">
-                        <strong><i class="fas fa-calendar me-2 text-primary"></i>Member Since:</strong>
-                        <p class="text-muted mb-0">{{customer.joined_on|date:"F d, Y"}}</p>
+                    
+                    <form id="profileEditForm" method="POST" enctype="multipart/form-data" style="display: none;">
+                        {% csrf_token %}
+                        
+                        <!-- Profile Image -->
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-image text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">Profile Picture</label>
+                                {% if customer.image %}
+                                <div class="mb-2">
+                                    <img src="{{ customer.image.url }}" alt="Current profile picture" 
+                                         style="max-width: 100px; max-height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color);">
+                                </div>
+                                {% endif %}
+                                {{ form.image }}
+                                {% if form.image.errors %}
+                                <div class="text-danger small mt-1">{{ form.image.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Full Name -->
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-user text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">Full Name</label>
+                                {{ form.full_name }}
+                                {% if form.full_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.full_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-envelope text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">Email</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Address -->
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-map-marker-alt text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">Address</label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                <div class="text-danger small mt-1">{{ form.address.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Town/City -->
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-city text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">Town/City</label>
+                                {{ form.town }}
+                                {% if form.town.errors %}
+                                <div class="text-danger small mt-1">{{ form.town.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- County -->
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-globe text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">County</label>
+                                {{ form.county }}
+                                {% if form.county.errors %}
+                                <div class="text-danger small mt-1">{{ form.county.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- View Mode -->
+                    <div id="profileViewMode">
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-user text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">Full Name</label>
+                                <p class="info-value">{{customer.full_name}}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-at text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">Username</label>
+                                <p class="info-value">{{customer.user.username}}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-envelope text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">Email</label>
+                                <p class="info-value">{{customer.user.email}}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-map-marker-alt text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">Address</label>
+                                <p class="info-value">{{customer.address|default:"Not provided"}}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-city text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">Town/City</label>
+                                <p class="info-value">{{customer.town|default:"Not provided"}}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-globe text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">County</label>
+                                <p class="info-value">{{customer.county|default:"Not provided"}}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-info-item">
+                            <div class="info-icon">
+                                <i class="fas fa-calendar text-primary"></i>
+                            </div>
+                            <div class="info-content">
+                                <label class="info-label">Member Since</label>
+                                <p class="info-value">{{customer.joined_on|date:"F d, Y"}}</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -47,14 +224,35 @@
 
         <!-- Order History -->
         <div class="col-lg-8">
-            <div class="card-modern">
+            <div class="card-modern order-history-card">
                 <div class="card-body p-4">
-                    <h3 class="mb-4">
-                        <i class="fas fa-shopping-bag text-primary me-2"></i>Order History
-                    </h3>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="mb-0">
+                            <i class="fas fa-shopping-bag text-primary me-2"></i>My Order History
+                        </h3>
+                        {% if orders %}
+                        <div class="order-search-container">
+                            <div class="input-group order-search-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text" 
+                                       class="form-control border-start-0" 
+                                       id="orderSearchInput" 
+                                       placeholder="Search orders by ID, amount, status, date...">
+                                <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn" style="display: none;">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
                     {% if orders %}
+                    <div id="orderCount" class="mb-3 text-muted small">
+                        <i class="fas fa-list me-1"></i>Showing <span id="visibleCount">{{orders|length}}</span> of {{orders|length}} orders
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-modern">
+                        <table class="table table-modern" id="ordersTable">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -65,9 +263,15 @@
                                     <th>Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="ordersTableBody">
                                 {% for ord in orders %}
-                                <tr>
+                                <tr class="order-row" 
+                                    data-order-id="{{ord.id}}" 
+                                    data-order-number="#ORDER_{{ord.id}}"
+                                    data-amount="{{ord.total}}"
+                                    data-status="{{ord.order_status}}"
+                                    data-date="{{ord.created_at|date:'Y-m-d'}}"
+                                    data-date-text="{{ord.created_at|timesince}} ago">
                                     <td>{{forloop.counter}}</td>
                                     <td>
                                         <a href="{% url 'ecomapp:customerorderdetail' ord.pk %}" class="text-decoration-none">
@@ -95,6 +299,10 @@
                             </tbody>
                         </table>
                     </div>
+                    <div id="noResultsMessage" class="text-center py-4" style="display: none;">
+                        <i class="fas fa-search fa-2x text-muted mb-3"></i>
+                        <p class="text-muted mb-0">No orders found matching your search.</p>
+                    </div>
                     {% else %}
                     <div class="empty-state">
                         <i class="fas fa-shopping-bag"></i>
@@ -110,4 +318,479 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Profile Card Styles - Match Order History Height */
+    .profile-card {
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        min-height: 100%;
+    }
+    
+    .profile-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Make profile card match order history card height */
+    @media (min-width: 992px) {
+        .row.g-4 {
+            display: flex;
+            align-items: stretch;
+        }
+        
+        .row.g-4 > div {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .profile-card,
+        .order-history-card {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .profile-card .card-body,
+        .order-history-card .card-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+    }
+    
+    /* Profile Image Section */
+    .profile-image-section {
+        padding: 1rem 0;
+    }
+    
+    .profile-image {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid var(--primary-color);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        transition: transform 0.3s ease;
+    }
+    
+    .profile-image:hover {
+        transform: scale(1.05);
+    }
+    
+    .profile-image-placeholder {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 4px solid var(--primary-color);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    }
+    
+    .profile-image-placeholder i {
+        font-size: 80px;
+        color: #ffffff;
+    }
+    
+    /* Status Indicator */
+    .profile-status {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+    
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+    
+    .status-indicator.online {
+        background-color: var(--success-color);
+        box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.2);
+    }
+    
+    .status-text {
+        font-size: 0.875rem;
+        color: var(--gray-color);
+        font-weight: 500;
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.7;
+        }
+    }
+    
+    /* Profile Info Items */
+    .profile-info-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+        padding: 1rem 0;
+        border-bottom: 1px solid var(--border-color);
+        transition: background-color 0.2s ease;
+    }
+    
+    .profile-info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .profile-info-item:hover {
+        background-color: var(--light-color);
+        margin: 0 -1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        border-radius: 8px;
+    }
+    
+    .info-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: rgba(99, 102, 241, 0.1);
+        border-radius: 10px;
+        flex-shrink: 0;
+    }
+    
+    .info-icon i {
+        font-size: 1.125rem;
+    }
+    
+    .info-content {
+        flex: 1;
+    }
+    
+    .info-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--gray-color);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.25rem;
+    }
+    
+    .info-value {
+        font-size: 1rem;
+        font-weight: 500;
+        color: var(--dark-color);
+        margin: 0;
+        word-break: break-word;
+    }
+    
+    /* Card Modern Styles */
+    .card-modern {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+    
+    .card-modern:hover {
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    /* Table Styles */
+    .table-modern {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .table-modern thead th {
+        background-color: var(--light-color);
+        color: var(--dark-color);
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border-bottom: 2px solid var(--border-color);
+    }
+    
+    .table-modern tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .table-modern tbody tr:hover {
+        background-color: var(--light-color);
+    }
+    
+    .table-modern tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+    }
+    
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--gray-light);
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state h4 {
+        color: var(--dark-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state p {
+        color: var(--gray-color);
+        margin-bottom: 1rem;
+    }
+    
+    /* Order Search Styles */
+    .order-search-container {
+        max-width: 350px;
+    }
+    
+    .order-search-group {
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .order-search-group .form-control {
+        border-left: none;
+        padding-left: 0;
+    }
+    
+    .order-search-group .input-group-text {
+        border-right: none;
+        background-color: #f8f9fa;
+    }
+    
+    .order-search-group .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
+    }
+    
+    .order-row.hidden {
+        display: none;
+    }
+    
+    #noResultsMessage {
+        background-color: var(--light-color);
+        border-radius: 8px;
+        margin-top: 1rem;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 991.98px) {
+        .profile-image,
+        .profile-image-placeholder {
+            width: 120px;
+            height: 120px;
+        }
+        
+        .profile-image-placeholder i {
+            font-size: 60px;
+        }
+        
+        .d-flex.justify-content-between.align-items-center.mb-4 {
+            flex-direction: column;
+            align-items: flex-start !important;
+            gap: 1rem;
+        }
+        
+        .order-search-container {
+            max-width: 100%;
+            width: 100%;
+        }
+    }
+    
+    @media (max-width: 575.98px) {
+        .profile-info-item {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .info-icon {
+            width: 35px;
+            height: 35px;
+        }
+        
+        .table-responsive {
+            font-size: 0.875rem;
+        }
+        
+        .table-modern thead th,
+        .table-modern tbody td {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('orderSearchInput');
+    const clearBtn = document.getElementById('clearSearchBtn');
+    const ordersTable = document.getElementById('ordersTable');
+    const ordersTableBody = document.getElementById('ordersTableBody');
+    const noResultsMessage = document.getElementById('noResultsMessage');
+    const visibleCount = document.getElementById('visibleCount');
+    const orderRows = document.querySelectorAll('.order-row');
+    const totalOrders = orderRows.length;
+    
+    if (!searchInput) return; // Exit if search input doesn't exist
+    
+    function filterOrders() {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        let visibleCount = 0;
+        
+        if (searchTerm === '') {
+            // Show all orders
+            orderRows.forEach(row => {
+                row.classList.remove('hidden');
+                visibleCount++;
+            });
+            ordersTable.style.display = '';
+            noResultsMessage.style.display = 'none';
+            clearBtn.style.display = 'none';
+        } else {
+            // Filter orders
+            orderRows.forEach(row => {
+                const orderId = row.getAttribute('data-order-id') || '';
+                const orderNumber = row.getAttribute('data-order-number') || '';
+                const amount = row.getAttribute('data-amount') || '';
+                const status = row.getAttribute('data-status') || '';
+                const date = row.getAttribute('data-date') || '';
+                const dateText = row.getAttribute('data-date-text') || '';
+                
+                // Search in all fields
+                const searchableText = (
+                    orderId + ' ' +
+                    orderNumber + ' ' +
+                    amount + ' ' +
+                    status + ' ' +
+                    date + ' ' +
+                    dateText
+                ).toLowerCase();
+                
+                if (searchableText.includes(searchTerm)) {
+                    row.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+            
+            // Show/hide table and no results message
+            if (visibleCount === 0) {
+                ordersTable.style.display = 'none';
+                noResultsMessage.style.display = 'block';
+            } else {
+                ordersTable.style.display = '';
+                noResultsMessage.style.display = 'none';
+            }
+            
+            clearBtn.style.display = searchTerm ? 'block' : 'none';
+        }
+        
+        // Update visible count
+        if (document.getElementById('visibleCount')) {
+            document.getElementById('visibleCount').textContent = visibleCount;
+        }
+    }
+    
+    // Search input event listener
+    searchInput.addEventListener('input', filterOrders);
+    searchInput.addEventListener('keyup', filterOrders);
+    
+    // Clear search button
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            filterOrders();
+            searchInput.focus();
+        });
+    }
+    
+    // Allow Enter key to clear search
+    searchInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            searchInput.value = '';
+            filterOrders();
+        }
+    });
+});
+
+// Profile Edit Mode Toggle Functions
+function toggleEditMode() {
+    const viewMode = document.getElementById('profileViewMode');
+    const editForm = document.getElementById('profileEditForm');
+    const editBtn = document.getElementById('editProfileBtn');
+    const editActions = document.getElementById('editActions');
+    
+    if (viewMode && editForm && editBtn && editActions) {
+        if (viewMode.style.display === 'none') {
+            // Switch to view mode
+            viewMode.style.display = 'block';
+            editForm.style.display = 'none';
+            editBtn.style.display = 'block';
+            editActions.style.display = 'none';
+        } else {
+            // Switch to edit mode
+            viewMode.style.display = 'none';
+            editForm.style.display = 'block';
+            editBtn.style.display = 'none';
+            editActions.style.display = 'block';
+        }
+    }
+}
+
+function cancelEdit() {
+    // Reload page to reset form
+    window.location.reload();
+}
+
+// Show edit mode if form has errors
+{% if form.errors %}
+document.addEventListener('DOMContentLoaded', function() {
+    toggleEditMode();
+});
+{% endif %}
+</script>
+
+<style>
+    /* Edit Mode Styles */
+    #profileEditForm input[type="text"],
+    #profileEditForm input[type="email"],
+    #profileEditForm input[type="file"] {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 2px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    
+    #profileEditForm input:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+    
+    #profileEditForm input[type="file"] {
+        padding: 0.5rem;
+        cursor: pointer;
+    }
+</style>
 {% endblock %}

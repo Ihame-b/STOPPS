@@ -1,4 +1,4 @@
-from .models import Cargo, Order, Customer, Product, ProductOwner, Category
+from .models import Cargo, Order, Customer, Product, ProductOwner, Category, LinfoxUser
 from django.contrib.auth.models import User
 from django import forms
 
@@ -17,7 +17,17 @@ class CustomerRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = Customer
-        fields = ["username", "password","full_name", "county", "town", "email",  "address"]
+        fields = ["username", "password","full_name", "county", "town", "email",  "address", "image"]
+        widgets = {
+            "image": forms.ClearableFileInput(attrs={
+                "class": "form-control"
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Make image field optional
+        self.fields['image'].required = False
 
     def clean_username(self):
         uname = self.cleaned_data.get("username")
@@ -26,6 +36,16 @@ class CustomerRegistrationForm(forms.ModelForm):
                 "Customer with this username already exists.")
 
         return uname
+    
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if email:
+            email = email.strip().lower()  # Normalize email
+            if User.objects.filter(email=email).exists():
+                raise forms.ValidationError(
+                    "A user with this email address already exists. Please use a different email."
+                )
+        return email
 
 
 class productOwnerRegistrationForm(forms.ModelForm):
@@ -75,12 +95,221 @@ class productOwnerRegistrationForm(forms.ModelForm):
         if User.objects.filter(username=uname).exists():
             raise forms.ValidationError(
                 "ProductOwner with this username already exists.")
-        return uname        
+        return uname
+    
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if email:
+            email = email.strip().lower()  # Normalize email
+            if User.objects.filter(email=email).exists():
+                raise forms.ValidationError(
+                    "A user with this email address already exists. Please use a different email."
+                )
+        return email        
 
 
 class CustomerLoginForm(forms.Form):
     username = forms.CharField(widget=forms.TextInput())
     password = forms.CharField(widget=forms.PasswordInput())
+    
+    def clean_username(self):
+        username = self.cleaned_data.get('username')
+        if username:
+            return username.strip()
+        return username
+    
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        if password:
+            return password.strip()
+        return password
+
+
+class CustomerProfileEditForm(forms.ModelForm):
+    """Form for customers to edit their profile"""
+    email = forms.EmailField(required=True)
+    
+    class Meta:
+        model = Customer
+        fields = ["full_name", "image", "address", "town", "county", "email"]
+        widgets = {
+            "full_name": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your full name",
+                "style": "width: 100%; padding: 0.5rem 0.75rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            }),
+            "image": forms.ClearableFileInput(attrs={
+                "class": "form-control",
+                "style": "width: 100%; padding: 0.5rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            }),
+            "address": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your address",
+                "style": "width: 100%; padding: 0.5rem 0.75rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            }),
+            "town": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your town/city",
+                "style": "width: 100%; padding: 0.5rem 0.75rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            }),
+            "county": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your county",
+                "style": "width: 100%; padding: 0.5rem 0.75rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            }),
+            "email": forms.EmailInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your email",
+                "style": "width: 100%; padding: 0.5rem 0.75rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.user:
+            self.fields['email'].initial = self.instance.user.email
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            email = email.strip().lower()  # Normalize email
+            # Check if email is already used by another user
+            from django.contrib.auth.models import User
+            existing_user = User.objects.filter(email=email).first()
+            if existing_user and existing_user != self.instance.user:
+                raise forms.ValidationError(
+                    'A user with this email address already exists. Please use a different email.'
+                )
+        return email
+    
+    def save(self, commit=True):
+        customer = super().save(commit=False)
+        if commit:
+            customer.save()
+            # Update user email if changed
+            if 'email' in self.cleaned_data:
+                email = self.cleaned_data['email'].strip().lower()
+                customer.user.email = email
+                customer.user.save()
+        return customer
+
+class ProductOwnerProfileEditForm(forms.ModelForm):
+    """Form for product owners to edit their profile"""
+    email = forms.EmailField(required=True)
+    
+    class Meta:
+        model = ProductOwner
+        fields = ["full_name", "image", "mobile", "email"]
+        widgets = {
+            "full_name": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your full name",
+                "style": "width: 100%; padding: 0.5rem 0.75rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            }),
+            "image": forms.ClearableFileInput(attrs={
+                "class": "form-control",
+                "style": "width: 100%; padding: 0.5rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            }),
+            "mobile": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your mobile number",
+                "style": "width: 100%; padding: 0.5rem 0.75rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            }),
+            "email": forms.EmailInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your email",
+                "style": "width: 100%; padding: 0.5rem 0.75rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.user:
+            self.fields['email'].initial = self.instance.user.email
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            email = email.strip().lower()  # Normalize email
+            # Check if email is already used by another user
+            from django.contrib.auth.models import User
+            existing_user = User.objects.filter(email=email).first()
+            if existing_user and existing_user != self.instance.user:
+                raise forms.ValidationError(
+                    'A user with this email address already exists. Please use a different email.'
+                )
+        return email
+    
+    def save(self, commit=True):
+        product_owner = super().save(commit=False)
+        if commit:
+            product_owner.save()
+            # Update user email if changed
+            if 'email' in self.cleaned_data:
+                email = self.cleaned_data['email'].strip().lower()
+                product_owner.user.email = email
+                product_owner.user.save()
+        return product_owner
+
+
+class LinfoxProfileEditForm(forms.ModelForm):
+    """Form for Linfox users to edit their profile"""
+    email = forms.EmailField(required=True)
+    
+    class Meta:
+        model = LinfoxUser
+        fields = ["full_name", "image", "mobile", "email"]
+        widgets = {
+            "full_name": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your full name",
+                "style": "width: 100%; padding: 0.5rem 0.75rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            }),
+            "image": forms.ClearableFileInput(attrs={
+                "class": "form-control",
+                "style": "width: 100%; padding: 0.5rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            }),
+            "mobile": forms.TextInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your mobile number",
+                "style": "width: 100%; padding: 0.5rem 0.75rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            }),
+            "email": forms.EmailInput(attrs={
+                "class": "form-control",
+                "placeholder": "Enter your email",
+                "style": "width: 100%; padding: 0.5rem 0.75rem; border: 2px solid #e5e7eb; border-radius: 6px;"
+            })
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.user:
+            self.fields['email'].initial = self.instance.user.email
+    
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        if email:
+            email = email.strip().lower()  # Normalize email
+            # Check if email is already used by another user
+            from django.contrib.auth.models import User
+            existing_user = User.objects.filter(email=email).first()
+            if existing_user and existing_user != self.instance.user:
+                raise forms.ValidationError(
+                    'A user with this email address already exists. Please use a different email.'
+                )
+        return email
+    
+    def save(self, commit=True):
+        linfox_user = super().save(commit=False)
+        if commit:
+            linfox_user.save()
+            # Update user email if changed
+            if 'email' in self.cleaned_data:
+                email = self.cleaned_data['email'].strip().lower()
+                linfox_user.user.email = email
+                linfox_user.user.save()
+        return linfox_user
+
 
 class MultiFileInput(forms.ClearableFileInput):
     allow_multiple_selected = True
@@ -180,37 +409,61 @@ class CargoForm(forms.ModelForm):
 class PasswordForgotForm(forms.Form):
     email = forms.CharField(widget=forms.EmailInput(attrs={
         "class": "form-control",
-        "placeholder": "Enter the email used in customer account..."
+        "placeholder": "Enter the email used in your account..."
     }))
 
     def clean_email(self):
         e = self.cleaned_data.get("email")
-        if Customer.objects.filter(user__email=e).exists():
-            pass
-        else:
+        # Check if user exists (for any user type: Customer, ProductOwner, Admin, LinfoxUser)
+        from django.contrib.auth.models import User
+        if not User.objects.filter(email=e).exists():
             raise forms.ValidationError(
-                "Customer with this account does not exists..")
+                "No account found with this email address.")
         return e
 
 
 class PasswordResetForm(forms.Form):
-    new_password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'form-control',
-        'autocomplete': 'new-password',
-        'placeholder': 'Enter New Password',
-    }), label="New Password")
-    confirm_new_password = forms.CharField(widget=forms.PasswordInput(attrs={
-        'class': 'form-control',
-        'autocomplete': 'new-password',
-        'placeholder': 'Confirm New Password',
-    }), label="Confirm New Password")
+    new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'autocomplete': 'new-password',
+            'placeholder': 'Enter New Password',
+        }),
+        label="New Password",
+        min_length=8,
+        help_text="Password must be at least 8 characters long."
+    )
+    confirm_new_password = forms.CharField(
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'autocomplete': 'new-password',
+            'placeholder': 'Confirm New Password',
+        }),
+        label="Confirm New Password"
+    )
+
+    def clean_new_password(self):
+        password = self.cleaned_data.get("new_password")
+        if password:
+            password = password.strip()
+            if len(password) < 8:
+                raise forms.ValidationError(
+                    "Password must be at least 8 characters long."
+                )
+        return password
 
     def clean_confirm_new_password(self):
         new_password = self.cleaned_data.get("new_password")
         confirm_new_password = self.cleaned_data.get("confirm_new_password")
-        if new_password != confirm_new_password:
-            raise forms.ValidationError(
-                "New Passwords did not match!")
+        
+        if confirm_new_password:
+            confirm_new_password = confirm_new_password.strip()
+        
+        if new_password and confirm_new_password:
+            if new_password != confirm_new_password:
+                raise forms.ValidationError(
+                    "New Passwords did not match! Make sure both passwords are exactly the same."
+                )
         return confirm_new_password
 
 

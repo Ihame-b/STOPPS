@@ -255,6 +255,11 @@ class AddToCartView(EcomMixin, View):
         cart_id = self.request.session.get("cart_id", None)
         if cart_id:
             cart_obj = Cart.objects.get(id=cart_id)
+            # Ensure customer is assigned to cart if user is authenticated
+            if request.user.is_authenticated and Customer.objects.filter(user=request.user).exists():
+                if not cart_obj.customer:
+                    cart_obj.customer = request.user.customer
+                    cart_obj.save()
             this_product_in_cart = cart_obj.cartproduct_set.filter(
                 product=product_obj)
 
@@ -275,7 +280,11 @@ class AddToCartView(EcomMixin, View):
                 cart_obj.save()
                 message = f"{product_obj.title} added to cart successfully!"
         else:
+            # Create new cart and assign customer if authenticated
             cart_obj = Cart.objects.create(total=0)
+            if request.user.is_authenticated and Customer.objects.filter(user=request.user).exists():
+                cart_obj.customer = request.user.customer
+                cart_obj.save()
             self.request.session['cart_id'] = cart_obj.id
             cartproduct = CartProduct.objects.create(
                 cart=cart_obj, product=product_obj, rate=product_obj.selling_price, quantity=1, subtotal=product_obj.selling_price)
@@ -300,6 +309,12 @@ class ManageCartView(EcomMixin, View):
         action = request.GET.get("action")
         cp_obj = CartProduct.objects.get(id=cp_id)
         cart_obj = cp_obj.cart
+        
+        # Ensure customer is assigned to cart if user is authenticated
+        if request.user.is_authenticated and Customer.objects.filter(user=request.user).exists():
+            if not cart_obj.customer:
+                cart_obj.customer = request.user.customer
+                cart_obj.save()
 
         if action == "inc":
             cp_obj.quantity += 1
@@ -366,6 +381,11 @@ class MyCartView(EcomMixin, TemplateView):
         cart_id = self.request.session.get("cart_id", None)
         if cart_id:
             cart = Cart.objects.get(id=cart_id)
+            # Ensure customer is assigned to cart if user is authenticated
+            if self.request.user.is_authenticated and Customer.objects.filter(user=self.request.user).exists():
+                if not cart.customer:
+                    cart.customer = self.request.user.customer
+                    cart.save()
             # Calculate total including cargo prices
             cart_total = cart.total
             cargo_total = 0
@@ -412,6 +432,11 @@ class CheckoutView(EcomMixin, CreateView):
         cart_id = self.request.session.get("cart_id")
         if cart_id:
             cart_obj = Cart.objects.get(id=cart_id)
+            # Ensure customer is assigned to cart before creating order
+            if self.request.user.is_authenticated and Customer.objects.filter(user=self.request.user).exists():
+                if not cart_obj.customer:
+                    cart_obj.customer = self.request.user.customer
+                    cart_obj.save()
             form.instance.cart = cart_obj
             form.instance.subtotal = cart_obj.total
             form.instance.discount = 0
@@ -513,15 +538,27 @@ class EsewaVerifyView(View):
 class ProductOwnerRegistrationView(CreateView):
     template_name = "productownerregistration.html"
     form_class = productOwnerRegistrationForm
-    success_url = reverse_lazy("ecomapp:pohome")
+    success_url = reverse_lazy("ecomapp:productOwnerlogin")
 
     def form_valid(self, form):
         username = form.cleaned_data.get("username")
         password = form.cleaned_data.get("password")
         email = form.cleaned_data.get("email")
         user = User.objects.create_user(username, email, password)
+        # Set user as inactive until email is verified
+        user.is_active = False
+        user.save()
         form.instance.user = user
-        login(self.request, user)
+        form.save()
+        
+        # Send welcome email with verification link
+        from .utils import send_verification_email
+        send_verification_email(user, self.request, user_type='productowner', is_already_verified=False)
+        
+        messages.success(
+            self.request,
+            f'Registration successful! A welcome email with verification link has been sent to {email}. Please check your email to verify your account before logging in.'
+        )
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -534,15 +571,27 @@ class ProductOwnerRegistrationView(CreateView):
 class CustomerRegistrationView(CreateView):
     template_name = "customerregistration.html"
     form_class = CustomerRegistrationForm
-    success_url = reverse_lazy("ecomapp:home")
+    success_url = reverse_lazy("ecomapp:customerlogin")
 
     def form_valid(self, form):
         username = form.cleaned_data.get("username")
         password = form.cleaned_data.get("password")
         email = form.cleaned_data.get("email")
         user = User.objects.create_user(username, email, password)
+        # Set user as inactive until email is verified
+        user.is_active = False
+        user.save()
         form.instance.user = user
-        login(self.request, user)
+        form.save()
+        
+        # Send welcome email with verification link
+        from .utils import send_verification_email
+        send_verification_email(user, self.request, user_type='customer', is_already_verified=False)
+        
+        messages.success(
+            self.request,
+            f'Registration successful! A welcome email with verification link has been sent to {email}. Please check your email to verify your account before logging in.'
+        )
         return super().form_valid(form)
 
     def get_success_url(self):
@@ -569,11 +618,53 @@ class CustomerLoginView(FormView):
     def form_valid(self, form):
         uname = form.cleaned_data.get("username")
         pword = form.cleaned_data["password"]
+        
+        # Strip whitespace from username and password
+        uname = uname.strip() if uname else ""
+        pword = pword.strip() if pword else ""
+        
+        # Debug logging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Login attempt for username: {uname}")
+        
         usr = authenticate(username=uname, password=pword)
-        if usr is not None and Customer.objects.filter(user=usr).exists():
+        if usr is not None:
+            # Check if user has a customer profile
+            if not Customer.objects.filter(user=usr).exists():
+                messages.error(
+                    self.request,
+                    'Invalid credentials. This account is not registered as a customer.'
+                )
+                return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials"})
+            
+            # Check if email is verified
+            from .models import EmailVerificationToken
+            try:
+                verification = EmailVerificationToken.objects.get(user=usr)
+                if not verification.is_verified:
+                    messages.error(
+                        self.request,
+                        'Please verify your email address before logging in. Check your email for the verification link. If you did not receive the email, please contact support.'
+                    )
+                    return render(self.request, self.template_name, {"form": self.form_class})
+            except EmailVerificationToken.DoesNotExist:
+                # If no verification token exists, allow login (for backward compatibility with old accounts)
+                pass
+            
+            # Check if user is active
+            if not usr.is_active:
+                messages.error(
+                    self.request,
+                    'Your account is not active. Please verify your email address or contact support to activate your account.'
+                )
+                return render(self.request, self.template_name, {"form": self.form_class})
+            
+            # All checks passed - log the user in
             login(self.request, usr)
         else:
-            return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials"})
+            # Authentication failed - wrong username or password
+            return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid username or password"})
 
         return super().form_valid(form)
 
@@ -593,7 +684,7 @@ class ContactView(EcomMixin, TemplateView):
     template_name = "contactus.html"
 
 
-class CustomerProfileView(TemplateView):
+class CustomerProfileView(View):
     template_name = "customerprofile.html"
 
     def dispatch(self, request, *args, **kwargs):
@@ -603,13 +694,75 @@ class CustomerProfileView(TemplateView):
             return redirect("/login/?next=/profile/")
         return super().dispatch(request, *args, **kwargs)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        customer = self.request.user.customer
-        context['customer'] = customer
-        orders = Order.objects.filter(cart__customer=customer).order_by("-id")
-        context["orders"] = orders
-        return context
+    def get(self, request, *args, **kwargs):
+        customer = request.user.customer
+        form = CustomerProfileEditForm(instance=customer)
+        form.fields['email'].initial = customer.user.email
+        
+        # Get orders by cart customer OR by email (for backward compatibility with old orders)
+        orders = Order.objects.filter(
+            Q(cart__customer=customer) | Q(email=customer.user.email)
+        ).distinct().order_by("-id")
+        
+        context = {
+            'customer': customer,
+            'orders': orders,
+            'form': form,
+            'edit_mode': False
+        }
+        return render(request, self.template_name, context)
+    
+    def post(self, request, *args, **kwargs):
+        customer = request.user.customer
+        form = CustomerProfileEditForm(request.POST, request.FILES, instance=customer)
+        
+        if form.is_valid():
+            form.save()
+            # Update user email if changed
+            if 'email' in form.cleaned_data:
+                customer.user.email = form.cleaned_data['email']
+                customer.user.save()
+            messages.success(request, "Profile updated successfully!")
+            return redirect('ecomapp:customerprofile')
+        else:
+            # Get orders for context
+            orders = Order.objects.filter(
+                Q(cart__customer=customer) | Q(email=customer.user.email)
+            ).distinct().order_by("-id")
+            
+            context = {
+                'customer': customer,
+                'orders': orders,
+                'form': form,
+                'edit_mode': True
+            }
+            return render(request, self.template_name, context)
+
+
+class CustomerProfileEditView(UpdateView):
+    """View for customers to edit their profile"""
+    model = Customer
+    form_class = CustomerProfileEditForm
+    template_name = "customerprofileedit.html"
+    success_url = reverse_lazy("ecomapp:customerprofile")
+    
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and Customer.objects.filter(user=request.user).exists():
+            # Ensure user can only edit their own profile
+            if self.get_object().user != request.user:
+                messages.error(request, "You can only edit your own profile.")
+                return redirect("ecomapp:customerprofile")
+        else:
+            return redirect("/login/?next=/profile/edit/")
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_object(self):
+        """Get the customer object for the current user"""
+        return self.request.user.customer
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Profile updated successfully!")
+        return super().form_valid(form)
 
 
 class CustomerOrderDetailView(DetailView):
@@ -620,8 +773,22 @@ class CustomerOrderDetailView(DetailView):
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated and Customer.objects.filter(user=request.user).exists():
             order_id = self.kwargs["pk"]
-            order = Order.objects.get(id=order_id)
-            if request.user.customer != order.cart.customer:
+            try:
+                order = Order.objects.get(id=order_id)
+                customer = request.user.customer
+                # Check if order belongs to this customer by cart customer OR email
+                # This ensures access control works even for old orders without cart customer
+                order_belongs_to_customer = False
+                if order.cart.customer == customer:
+                    order_belongs_to_customer = True
+                elif order.email and order.email == customer.user.email:
+                    order_belongs_to_customer = True
+                
+                if not order_belongs_to_customer:
+                    # Order doesn't belong to this customer - redirect to profile
+                    return redirect("ecomapp:customerprofile")
+            except Order.DoesNotExist:
+                # Order doesn't exist - redirect to profile
                 return redirect("ecomapp:customerprofile")
         else:
             return redirect("/login/?next=/profile/")
@@ -649,22 +816,66 @@ class PasswordForgotView(FormView):
     def form_valid(self, form):
         # get email from user
         email = form.cleaned_data.get("email")
-        # get current host ip/domain
-        url = self.request.META['HTTP_HOST']
-        # get customer and then user
-        customer = Customer.objects.get(user__email=email)
-        user = customer.user
-        # send mail to the user with email
-        text_content = 'Please Click the link below to reset your password. '
-        html_content = url + "/password-reset/" + email + \
-            "/" + password_reset_token.make_token(user) + "/"
-        send_mail(
-            'Password Reset Link | Django STOPPS',
-            text_content + html_content,
-            settings.EMAIL_HOST_USER,
-            [email],
-            fail_silently=True,
-        )
+        try:
+            # Try to get user by email (works for all user types)
+            user = User.objects.get(email=email)
+            
+            # Determine user type
+            user_type = 'customer'
+            if ProductOwner.objects.filter(user=user).exists():
+                user_type = 'productowner'
+            elif Admin.objects.filter(user=user).exists():
+                user_type = 'admin'
+            elif LinfoxUser.objects.filter(user=user).exists():
+                user_type = 'linfox'
+            
+            # Use the new email utility function
+            from .utils import send_password_reset_email
+            try:
+                email_sent = send_password_reset_email(user, self.request, user_type=user_type)
+                if email_sent:
+                    messages.success(
+                        self.request,
+                        f'Password reset link has been sent to {email}. Please check your email (including spam folder).'
+                    )
+                else:
+                    # Check if it's a configuration issue
+                    from django.conf import settings
+                    if not settings.EMAIL_HOST_USER or not settings.EMAIL_HOST_PASSWORD:
+                        messages.error(
+                            self.request,
+                            'Email configuration is missing. Please contact the administrator. Error: EMAIL_HOST_USER or EMAIL_HOST_PASSWORD not set.'
+                        )
+                    else:
+                        messages.error(
+                            self.request,
+                            f'Failed to send password reset email to {email}. Please check your email configuration in settings.py or contact support. Check the console for detailed error messages.'
+                        )
+            except Exception as email_error:
+                # Log the error for debugging
+                import traceback
+                error_details = traceback.format_exc()
+                print(f"Error sending password reset email: {email_error}")
+                print(error_details)
+                messages.error(
+                    self.request,
+                    f'Failed to send password reset email. Error: {str(email_error)}. Please check the console for details or contact support.'
+                )
+        except User.DoesNotExist:
+            messages.error(
+                self.request,
+                'No account found with this email address.'
+            )
+        except Exception as e:
+            # Log the error for debugging
+            import traceback
+            print(f"Error in password reset: {e}")
+            print(traceback.format_exc())
+            messages.error(
+                self.request,
+                f'An error occurred: {str(e)}. Please try again later or contact support.'
+            )
+        
         return super().form_valid(form)
 
 
@@ -688,8 +899,68 @@ class PasswordResetView(FormView):
         password = form.cleaned_data['new_password']
         email = self.kwargs.get("email")
         user = User.objects.get(email=email)
+        
+        # Strip any whitespace that might have been accidentally added
+        password = password.strip()
+        
+        # Validate password is not empty
+        if not password:
+            messages.error(
+                self.request,
+                'Error: Password cannot be empty. Please enter a valid password.'
+            )
+            return render(self.request, self.template_name, {"form": self.form_class})
+        
+        # Set new password - this will hash it properly
         user.set_password(password)
-        user.save()
+        
+        # Save with explicit update_fields to ensure password is saved
+        user.save(update_fields=['password'])
+        
+        # Refresh user from database to get latest data
+        user.refresh_from_db()
+        
+        # Verify password was saved by checking if user has a password hash
+        if not user.has_usable_password():
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Password was not saved for user {user.username}")
+            messages.error(
+                self.request,
+                'Error: Password was not saved. Please try again.'
+            )
+            return render(self.request, self.template_name, {"form": self.form_class})
+        
+        # Test authentication immediately to verify password works
+        from django.contrib.auth import authenticate
+        test_auth = authenticate(username=user.username, password=password)
+        
+        # Log the result
+        import logging
+        logger = logging.getLogger(__name__)
+        if test_auth:
+            logger.info(f"Password successfully reset and verified for user {user.username} (ID: {user.pk})")
+            print(f"✅ Password reset successful for {user.username}")
+        else:
+            logger.warning(f"Password reset saved for {user.username} but immediate authentication test failed - this might be a caching issue")
+            print(f"⚠️ Password saved for {user.username} but auth test failed - user should try logging in")
+        
+        # Invalidate all existing sessions for this user
+        from django.contrib.sessions.models import Session
+        from django.utils import timezone
+        sessions = Session.objects.filter(expire_date__gte=timezone.now())
+        for session in sessions:
+            try:
+                session_data = session.get_decoded()
+                if session_data.get('_auth_user_id') == str(user.pk):
+                    session.delete()
+            except Exception:
+                continue
+        
+        messages.success(
+            self.request,
+            f'Password reset successfully! Your old password is no longer valid. Please login with your USERNAME "{user.username}" and your new password.'
+        )
         return super().form_valid(form)
 
 # admin pages
@@ -713,30 +984,71 @@ class AdminLoginView(FormView):
     def form_valid(self, form):
         uname = form.cleaned_data.get("username")
         pword = form.cleaned_data["password"]
+        
+        # Strip whitespace from username and password
+        uname = uname.strip() if uname else ""
+        pword = pword.strip() if pword else ""
+        
+        # Debug logging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Admin login attempt for username: {uname}")
+        
         usr = authenticate(username=uname, password=pword)
         if usr is not None:
             is_admin = Admin.objects.filter(user=usr).exists()
             is_linfox = LinfoxUser.objects.filter(user=usr).exists()
             
             if is_admin:
-                # Super Admin can login and access admin dashboard
+                # Check if email is verified
+                from .models import EmailVerificationToken
+                try:
+                    verification = EmailVerificationToken.objects.get(user=usr)
+                    if not verification.is_verified:
+                        messages.error(
+                            self.request,
+                            'Please verify your email address before logging in. Check your email for the verification link. If you did not receive the email, please contact support.'
+                        )
+                        return render(self.request, self.template_name, {"form": self.form_class})
+                except EmailVerificationToken.DoesNotExist:
+                    # If no verification token exists, allow login (for backward compatibility with old accounts)
+                    pass
+                
+                # Check if user is active
+                if not usr.is_active:
+                    messages.error(
+                        self.request,
+                        'Your account is not active. Please verify your email address or contact support to activate your account.'
+                    )
+                    return render(self.request, self.template_name, {"form": self.form_class})
+                
+                # All checks passed - log the user in
                 login(self.request, usr)
                 return redirect("ecomapp:adminhome")
             elif is_linfox:
                 # LinfoxUser should use Linfox login page
+                messages.error(
+                    self.request,
+                    'Linfox users should login from the Linfox login page. Please use /linfox-login/ instead.'
+                )
                 return render(self.request, self.template_name, {
                     "form": self.form_class, 
                     "error": "Linfox users should login from the Linfox login page. Please use /linfox-login/ instead."
                 })
             else:
+                messages.error(
+                    self.request,
+                    'Invalid credentials or you are not authorized to access the admin dashboard.'
+                )
                 return render(self.request, self.template_name, {
                     "form": self.form_class, 
                     "error": "Invalid credentials or you are not authorized to access the admin dashboard."
                 })
         else:
+            # Authentication failed - wrong username or password
             return render(self.request, self.template_name, {
                 "form": self.form_class, 
-                "error": "Invalid credentials"
+                "error": "Invalid username or password"
             })
         return super().form_valid(form)
 
@@ -875,9 +1187,37 @@ class AdminProductOwnerCreateView(AdminRequiredMixin, CreateView):
         username = form.cleaned_data.get("username")
         password = form.cleaned_data.get("password")
         email = form.cleaned_data.get("email")
+        
+        # Normalize email
+        if email:
+            email = email.strip().lower()
+        
+        # Check if email already exists
+        if email and User.objects.filter(email=email).exists():
+            form.add_error('email', 'A user with this email address already exists.')
+            return self.form_invalid(form)
+        
         user = User.objects.create_user(username, email, password)
+        # Admin-created users should be active and ready to use immediately
+        user.is_active = True
+        user.save()
         form.instance.user = user
-        messages.success(self.request, f"Product Owner '{form.instance.full_name}' created successfully!")
+        form.save()
+        
+        # Create email verification token and mark as verified for admin-created users
+        from .models import EmailVerificationToken
+        import secrets
+        token = secrets.token_urlsafe(32)
+        EmailVerificationToken.objects.update_or_create(
+            user=user,
+            defaults={'token': token, 'is_verified': True}
+        )
+        
+        # Send welcome email (account is already verified)
+        from .utils import send_verification_email
+        send_verification_email(user, self.request, user_type='productowner', is_already_verified=True)
+        
+        messages.success(self.request, f"Product Owner '{form.instance.full_name}' created successfully! A welcome email has been sent to {email}. They can login immediately.")
         return super().form_valid(form)
 
 
@@ -926,9 +1266,37 @@ class AdminCustomerCreateView(AdminRequiredMixin, CreateView):
         username = form.cleaned_data.get("username")
         password = form.cleaned_data.get("password")
         email = form.cleaned_data.get("email")
+        
+        # Normalize email
+        if email:
+            email = email.strip().lower()
+        
+        # Check if email already exists
+        if email and User.objects.filter(email=email).exists():
+            form.add_error('email', 'A user with this email address already exists.')
+            return self.form_invalid(form)
+        
         user = User.objects.create_user(username, email, password)
+        # Admin-created users should be active and ready to use immediately
+        user.is_active = True
+        user.save()
         form.instance.user = user
-        messages.success(self.request, f"Customer '{form.instance.full_name}' created successfully!")
+        form.save()
+        
+        # Create email verification token and mark as verified for admin-created users
+        from .models import EmailVerificationToken
+        import secrets
+        token = secrets.token_urlsafe(32)
+        EmailVerificationToken.objects.update_or_create(
+            user=user,
+            defaults={'token': token, 'is_verified': True}
+        )
+        
+        # Send welcome email (account is already verified)
+        from .utils import send_verification_email
+        send_verification_email(user, self.request, user_type='customer', is_already_verified=True)
+        
+        messages.success(self.request, f"Customer '{form.instance.full_name}' created successfully! A welcome email has been sent to {email}. They can login immediately.")
         return super().form_valid(form)
 
 
@@ -968,6 +1336,13 @@ class AdminCargoCreateView(AdminRequiredMixin, CreateView):
     success_url = reverse_lazy("ecomapp:linfoxcargolist")
 
     def form_valid(self, form):
+        p = form.save(commit=False)
+        # If user is a Linfox user, assign cargo to them
+        if LinfoxUser.objects.filter(user=self.request.user).exists():
+            linfox_user = LinfoxUser.objects.get(user=self.request.user)
+            p.created_by = linfox_user
+        # If user is Admin (not Linfox), leave created_by as None (admin can see all)
+        p.save()
         messages.success(self.request, "Cargo created successfully!")
         return super().form_valid(form)
 
@@ -978,6 +1353,22 @@ class AdminCargoUpdateView(AdminRequiredMixin, UpdateView):
     form_class = CargoForm
     success_url = reverse_lazy("ecomapp:linfoxcargolist")
     context_object_name = "cargo"
+    
+    def dispatch(self, request, *args, **kwargs):
+        cargo = self.get_object()
+        is_admin = Admin.objects.filter(user=request.user).exists()
+        is_linfox = LinfoxUser.objects.filter(user=request.user).exists()
+        
+        # If user is Linfox user (not Admin), only allow editing their own cargo
+        if is_linfox and not is_admin:
+            linfox_user = LinfoxUser.objects.get(user=request.user)
+            # Only allow Linfox users to edit their own cargo
+            if cargo.created_by and cargo.created_by != linfox_user:
+                messages.error(request, "You can only edit cargo that you created.")
+                return redirect("ecomapp:linfoxcargolist")
+        # Admin users can edit any cargo
+        
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         messages.success(self.request, f"Cargo '{form.instance.CampanyName}' updated successfully!")
@@ -1041,30 +1432,71 @@ class LinfoxLoginView(FormView):
     def form_valid(self, form):
         uname = form.cleaned_data.get("username")
         pword = form.cleaned_data["password"]
+        
+        # Strip whitespace from username and password
+        uname = uname.strip() if uname else ""
+        pword = pword.strip() if pword else ""
+        
+        # Debug logging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Linfox login attempt for username: {uname}")
+        
         usr = authenticate(username=uname, password=pword)
         if usr is not None:
             is_admin = Admin.objects.filter(user=usr).exists()
             is_linfox = LinfoxUser.objects.filter(user=usr).exists()
             
             if is_linfox:
-                # LinfoxUser can only access Linfox dashboard
+                # Check if email is verified
+                from .models import EmailVerificationToken
+                try:
+                    verification = EmailVerificationToken.objects.get(user=usr)
+                    if not verification.is_verified:
+                        messages.error(
+                            self.request,
+                            'Please verify your email address before logging in. Check your email for the verification link. If you did not receive the email, please contact support.'
+                        )
+                        return render(self.request, self.template_name, {"form": self.form_class})
+                except EmailVerificationToken.DoesNotExist:
+                    # If no verification token exists, allow login (for backward compatibility with old accounts)
+                    pass
+                
+                # Check if user is active
+                if not usr.is_active:
+                    messages.error(
+                        self.request,
+                        'Your account is not active. Please verify your email address or contact support to activate your account.'
+                    )
+                    return render(self.request, self.template_name, {"form": self.form_class})
+                
+                # All checks passed - log the user in
                 login(self.request, usr)
                 return redirect("ecomapp:linfoxhome")
             elif is_admin:
                 # Admin users should use admin login page
+                messages.error(
+                    self.request,
+                    'Admin users should login from the admin login page. Please use /admin-login/ instead.'
+                )
                 return render(self.request, self.template_name, {
                     "form": self.form_class, 
                     "error": "Admin users should login from the admin login page. Please use /admin-login/ instead."
                 })
             else:
+                messages.error(
+                    self.request,
+                    'Invalid credentials. This account is not registered as a Linfox user.'
+                )
                 return render(self.request, self.template_name, {
                     "form": self.form_class, 
-                    "error": "Invalid credentials or you are not authorized"
+                    "error": "Invalid credentials. This account is not registered as a Linfox user."
                 })
         else:
+            # Authentication failed - wrong username or password
             return render(self.request, self.template_name, {
                 "form": self.form_class, 
-                "error": "Invalid credentials"
+                "error": "Invalid username or password"
             })
         return super().form_valid(form)
 
@@ -1095,18 +1527,44 @@ class LinfoxHomeView(LinfoxRequiredMixin, TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        # Add statistics
-        context["total_cargo"] = Cargo.objects.count()
-        context["available_cargo"] = Cargo.objects.filter(cargo_status="Cargo Available").count()
-        context["in_transit_cargo"] = Cargo.objects.filter(cargo_status="In Transit").count()
-        context["all_cargo"] = Cargo.objects.all().order_by("-id")[:5]  # Recent cargo
+        
+        # Check if user is Admin or LinfoxUser
+        is_admin = Admin.objects.filter(user=self.request.user).exists()
+        is_linfox = LinfoxUser.objects.filter(user=self.request.user).exists()
+        
+        # Filter cargo based on user type
+        if is_linfox and not is_admin:
+            # Linfox users see only their own cargo
+            linfox_user = LinfoxUser.objects.get(user=self.request.user)
+            cargo_queryset = Cargo.objects.filter(created_by=linfox_user)
+        else:
+            # Admins see all cargo
+            cargo_queryset = Cargo.objects.all()
+        
+        # Add statistics (filtered by user type)
+        context["total_cargo"] = cargo_queryset.count()
+        context["available_cargo"] = cargo_queryset.filter(cargo_status="Cargo Available").count()
+        context["in_transit_cargo"] = cargo_queryset.filter(cargo_status="In Transit").count()
+        context["all_cargo"] = cargo_queryset.order_by("-id")[:5]  # Recent cargo
         return context
 
 
 class LinfoxCargoListView(LinfoxRequiredMixin, ListView):
     template_name = "linfox/linfoxcargolist.html"
-    queryset = Cargo.objects.all().order_by("-id")
     context_object_name = "allcargo"
+    
+    def get_queryset(self):
+        # Check if user is Admin or LinfoxUser
+        is_admin = Admin.objects.filter(user=self.request.user).exists()
+        is_linfox = LinfoxUser.objects.filter(user=self.request.user).exists()
+        
+        if is_linfox and not is_admin:
+            # Linfox users see only their own cargo
+            linfox_user = LinfoxUser.objects.get(user=self.request.user)
+            return Cargo.objects.filter(created_by=linfox_user).order_by("-id")
+        else:
+            # Admin users see all cargo
+            return Cargo.objects.all().order_by("-id")
 
 class LinfoxCargoCreateView(LinfoxRequiredMixin, CreateView):
     template_name = "linfox/linfoxproductcreate.html"
@@ -1114,7 +1572,13 @@ class LinfoxCargoCreateView(LinfoxRequiredMixin, CreateView):
     success_url = reverse_lazy("ecomapp:linfoxcargolist")
 
     def form_valid(self, form):
-        p = form.save()
+        p = form.save(commit=False)
+        # Assign the cargo to the logged-in Linfox user (if they are a LinfoxUser)
+        if LinfoxUser.objects.filter(user=self.request.user).exists():
+            linfox_user = LinfoxUser.objects.get(user=self.request.user)
+            p.created_by = linfox_user
+        # If Admin (not LinfoxUser), leave created_by as None
+        p.save()
         images = self.request.FILES.getlist("more_images")
         for i in images:
             LinfoxImage.objects.create(cargo=p, image=i)
@@ -1174,11 +1638,54 @@ class productOwnerLoginView(FormView):
     def form_valid(self, form):
         uname = form.cleaned_data.get("username")
         pword = form.cleaned_data["password"]
+        
+        # Strip whitespace from username and password
+        uname = uname.strip() if uname else ""
+        pword = pword.strip() if pword else ""
+        
+        # Debug logging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Product Owner login attempt for username: {uname}")
+        
         usr = authenticate(username=uname, password=pword)
-        if usr is not None and ProductOwner.objects.filter(user=usr).exists():
+        if usr is not None:
+            # Check if user has a product owner profile
+            if not ProductOwner.objects.filter(user=usr).exists():
+                messages.error(
+                    self.request,
+                    'Invalid credentials. This account is not registered as a product owner.'
+                )
+                return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials"})
+            
+            # Check if email is verified
+            from .models import EmailVerificationToken
+            try:
+                verification = EmailVerificationToken.objects.get(user=usr)
+                if not verification.is_verified:
+                    messages.error(
+                        self.request,
+                        'Please verify your email address before logging in. Check your email for the verification link. If you did not receive the email, please contact support.'
+                    )
+                    return render(self.request, self.template_name, {"form": self.form_class})
+            except EmailVerificationToken.DoesNotExist:
+                # If no verification token exists, allow login (for backward compatibility with old accounts)
+                pass
+            
+            # Check if user is active
+            if not usr.is_active:
+                messages.error(
+                    self.request,
+                    'Your account is not active. Please verify your email address or contact support to activate your account.'
+                )
+                return render(self.request, self.template_name, {"form": self.form_class})
+            
+            # All checks passed - log the user in
             login(self.request, usr)
         else:
-            return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid credentials"})
+            # Authentication failed - wrong username or password
+            return render(self.request, self.template_name, {"form": self.form_class, "error": "Invalid username or password"})
+        
         return super().form_valid(form)
 
 class productOwnerRequiredMixin(object):
@@ -1188,6 +1695,109 @@ class productOwnerRequiredMixin(object):
         else:
             return redirect("/product-login/")
         return super().dispatch(request, *args, **kwargs)
+
+class ProductOwnerProfileView(View):
+    """View for product owners to view and edit their profile"""
+    template_name = "productOwner/profile.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and ProductOwner.objects.filter(user=request.user).exists():
+            pass
+        else:
+            return redirect("/product-login/?next=/po-profile/")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        product_owner = request.user.productowner
+        form = ProductOwnerProfileEditForm(instance=product_owner)
+        form.fields['email'].initial = product_owner.user.email
+        
+        # Get products created by this product owner (using full_name from ProductOwner model)
+        products = Product.objects.filter(productowner=product_owner.full_name).order_by("-id")[:10]
+        
+        context = {
+            'product_owner': product_owner,
+            'products': products,
+            'form': form,
+            'edit_mode': False
+        }
+        return render(request, self.template_name, context)
+    
+    def post(self, request, *args, **kwargs):
+        product_owner = request.user.productowner
+        form = ProductOwnerProfileEditForm(request.POST, request.FILES, instance=product_owner)
+        
+        if form.is_valid():
+            form.save()
+            # Email is already updated in form.save(), but refresh user to ensure consistency
+            product_owner.user.refresh_from_db()
+            messages.success(request, "Profile updated successfully!")
+            return redirect('ecomapp:productownerprofile')
+        else:
+            # Get products for context
+            products = Product.objects.filter(productowner=product_owner.full_name).order_by("-id")[:10]
+            
+            context = {
+                'product_owner': product_owner,
+                'products': products,
+                'form': form,
+                'edit_mode': True
+            }
+            return render(request, self.template_name, context)
+
+
+class LinfoxProfileView(View):
+    """View for Linfox users to view and edit their profile"""
+    template_name = "linfox/profile.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated and LinfoxUser.objects.filter(user=request.user).exists():
+            pass
+        else:
+            return redirect("/linfox-login/?next=/linfox-profile/")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, request, *args, **kwargs):
+        linfox_user = LinfoxUser.objects.get(user=request.user)
+        form = LinfoxProfileEditForm(instance=linfox_user)
+        form.fields['email'].initial = linfox_user.user.email
+        
+        # Get cargo created by this Linfox user only
+        from .models import Cargo
+        cargo_list = Cargo.objects.filter(created_by=linfox_user).order_by("-id")[:10]
+        
+        context = {
+            'linfox_user': linfox_user,
+            'cargo_list': cargo_list,
+            'form': form,
+            'edit_mode': False
+        }
+        return render(request, self.template_name, context)
+    
+    def post(self, request, *args, **kwargs):
+        linfox_user = LinfoxUser.objects.get(user=request.user)
+        form = LinfoxProfileEditForm(request.POST, request.FILES, instance=linfox_user)
+        
+        if form.is_valid():
+            form.save()
+            # Email is already updated in form.save(), but refresh user to ensure consistency
+            linfox_user.user.refresh_from_db()
+            messages.success(request, "Profile updated successfully!")
+            return redirect('ecomapp:linfoxprofile')
+        else:
+            # Get cargo created by this Linfox user only
+            from .models import Cargo
+            cargo_list = Cargo.objects.filter(created_by=linfox_user).order_by("-id")[:10]
+            
+            context = {
+                'linfox_user': linfox_user,
+                'cargo_list': cargo_list,
+                'form': form,
+                'edit_mode': True
+            }
+            messages.error(request, "Please correct the errors below.")
+            return render(request, self.template_name, context)
+
 
 class productOwnerHomeView(productOwnerRequiredMixin, TemplateView):
     template_name = "productOwner/productOwnerhome.html"
@@ -1470,4 +2080,195 @@ def create_admin_view(request):
             'error': 'Failed to create/update admin user',
             'details': str(e)
         }, status=500)
+
+
+# Email Verification Views
+class VerifyEmailView(View):
+    """Verify user email address"""
+    def get(self, request, token):
+        from .models import EmailVerificationToken
+        try:
+            verification = EmailVerificationToken.objects.get(token=token, is_verified=False)
+            verification.is_verified = True
+            verification.save()
+            
+            # Activate user account
+            user = verification.user
+            user.is_active = True
+            user.save()
+            
+            messages.success(
+                request,
+                'Email verified successfully! You can now log in to your account.'
+            )
+            
+            # Determine redirect based on user type
+            if Customer.objects.filter(user=user).exists():
+                return redirect('ecomapp:customerlogin')
+            elif ProductOwner.objects.filter(user=user).exists():
+                return redirect('ecomapp:productOwnerlogin')
+            elif Admin.objects.filter(user=user).exists():
+                return redirect('ecomapp:adminlogin')
+            elif LinfoxUser.objects.filter(user=user).exists():
+                return redirect('ecomapp:linfoxlogin')
+            else:
+                return redirect('ecomapp:customerlogin')
+                
+        except EmailVerificationToken.DoesNotExist:
+            messages.error(
+                request,
+                'Invalid or expired verification link. Please request a new verification email.'
+            )
+            return redirect('ecomapp:home')
+
+
+class ResendVerificationEmailView(View):
+    """Resend verification email"""
+    def post(self, request):
+        email = request.POST.get('email')
+        if not email:
+            messages.error(request, 'Please provide your email address.')
+            return redirect('ecomapp:customerlogin')
+        
+        try:
+            user = User.objects.get(email=email)
+            from .utils import send_verification_email
+            
+            # Determine user type
+            user_type = 'customer'
+            if ProductOwner.objects.filter(user=user).exists():
+                user_type = 'productowner'
+            elif Admin.objects.filter(user=user).exists():
+                user_type = 'admin'
+            elif LinfoxUser.objects.filter(user=user).exists():
+                user_type = 'linfox'
+            
+            if send_verification_email(user, request, user_type=user_type):
+                messages.success(
+                    request,
+                    f'Verification email has been sent to {email}. Please check your inbox.'
+                )
+            else:
+                messages.error(
+                    request,
+                    'Failed to send verification email. Please try again later.'
+                )
+        except User.DoesNotExist:
+            messages.error(request, 'No account found with this email address.')
+        
+        return redirect('ecomapp:customerlogin')
+
+
+# Password Reset Views for All User Types - Updated version
+# Note: PasswordForgotView already exists above, we'll update it
+
+
+class PasswordResetConfirmView(FormView):
+    template_name = "passwordreset.html"
+    form_class = PasswordResetForm
+    success_url = reverse_lazy("ecomapp:customerlogin")
+
+    def dispatch(self, request, *args, **kwargs):
+        from django.utils.encoding import force_str
+        from django.utils.http import urlsafe_base64_decode
+        from .utils import password_reset_token
+        
+        try:
+            uidb64 = kwargs.get('uidb64')
+            token = kwargs.get('token')
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is not None and password_reset_token.check_token(user, token):
+            pass
+        else:
+            messages.error(
+                request,
+                'Invalid or expired password reset link. Please request a new one.'
+            )
+            return redirect("ecomapp:passworforgot")
+
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        from django.utils.encoding import force_str
+        from django.utils.http import urlsafe_base64_decode
+        from .utils import password_reset_token
+        from django.contrib.sessions.models import Session
+        from django.utils import timezone
+        
+        uidb64 = self.kwargs.get('uidb64')
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = User.objects.get(pk=uid)
+        
+        # Set new password
+        password = form.cleaned_data['new_password']
+        
+        # Strip any whitespace that might have been accidentally added
+        password = password.strip()
+        
+        # Validate password is not empty
+        if not password:
+            messages.error(
+                self.request,
+                'Error: Password cannot be empty. Please enter a valid password.'
+            )
+            return render(self.request, self.template_name, {"form": self.form_class})
+        
+        # Set and save new password - this will hash it properly
+        user.set_password(password)
+        
+        # Save with explicit update_fields to ensure password is saved
+        user.save(update_fields=['password'])
+        
+        # Refresh user from database to get latest data
+        user.refresh_from_db()
+        
+        # Verify password was saved by checking if user has a password hash
+        if not user.has_usable_password():
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Password was not saved for user {user.username}")
+            messages.error(
+                self.request,
+                'Error: Password was not saved. Please try again.'
+            )
+            return render(self.request, self.template_name, {"form": self.form_class})
+        
+        # Test authentication immediately to verify password works
+        from django.contrib.auth import authenticate
+        test_auth = authenticate(username=user.username, password=password)
+        
+        # Log the result
+        import logging
+        logger = logging.getLogger(__name__)
+        if test_auth:
+            logger.info(f"Password successfully reset and verified for user {user.username} (ID: {user.pk})")
+            print(f"✅ Password reset successful for {user.username}")
+        else:
+            logger.warning(f"Password reset saved for {user.username} but immediate authentication test failed - this might be a caching issue")
+            print(f"⚠️ Password saved for {user.username} but auth test failed - user should try logging in")
+        
+        # Invalidate all existing sessions for this user to prevent using old password
+        # This ensures that after password reset, old sessions are logged out
+        sessions = Session.objects.filter(expire_date__gte=timezone.now())
+        deleted_sessions = 0
+        for session in sessions:
+            try:
+                session_data = session.get_decoded()
+                if session_data.get('_auth_user_id') == str(user.pk):
+                    session.delete()
+                    deleted_sessions += 1
+            except Exception:
+                # Skip sessions that can't be decoded
+                continue
+        
+        messages.success(
+            self.request,
+            f'Password reset successfully! Your old password has been invalidated. Please login with your USERNAME "{user.username}" and your new password.'
+        )
+        
+        return super().form_valid(form)
 

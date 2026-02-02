@@ -1,0 +1,339 @@
+{% extends 'productOwner/productOwnerbase.html' %}
+{% load static %}
+
+{% block title %}My Profile - STOPPS{% endblock %}
+
+{% block content %}
+<div class="page-header" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 2rem 0; margin-bottom: 2rem;">
+    <div class="container">
+        <h1>My Profile</h1>
+        <p>Manage your account and view your products</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row g-4">
+        <!-- Profile Card with Image -->
+        <div class="col-lg-4">
+            <div class="card-modern profile-card" style="border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                <div class="card-body p-4">
+                    <!-- Profile Image Section -->
+                    <div class="profile-image-section text-center mb-4">
+                        {% if product_owner.image %}
+                            <img src="{{ product_owner.image.url }}" alt="{{ product_owner.full_name }}" 
+                                 style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #6366f1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);">
+                        {% else %}
+                            <div style="width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); display: inline-flex; align-items: center; justify-content: center; border: 4px solid #6366f1;">
+                                <i class="fas fa-user-circle" style="font-size: 80px; color: white;"></i>
+                            </div>
+                        {% endif %}
+                        <div class="profile-status mt-3">
+                            <span style="width: 12px; height: 12px; border-radius: 50%; background-color: #10b981; display: inline-block; margin-right: 0.5rem;"></span>
+                            <span style="font-size: 0.875rem; color: #6b7280;">Online</span>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <!-- Profile Information -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="mb-0 text-center flex-grow-1" style="font-size: 1.25rem;">
+                            <i class="fas fa-user-circle text-primary me-2"></i>Profile Information
+                        </h3>
+                        <button type="button" id="editProfileBtn" class="btn btn-sm btn-primary" onclick="toggleEditMode()">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </button>
+                        <div id="editActions" style="display: none;">
+                            <button type="submit" form="profileEditForm" class="btn btn-sm btn-success me-2">
+                                <i class="fas fa-save me-1"></i>Save
+                            </button>
+                            <button type="button" class="btn btn-sm btn-secondary" onclick="cancelEdit()">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <form id="profileEditForm" method="POST" enctype="multipart/form-data" style="display: none;">
+                        {% csrf_token %}
+                        
+                        <!-- Profile Image -->
+                        <div class="profile-info-item mb-3">
+                            <div class="info-icon" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background-color: rgba(99, 102, 241, 0.1); border-radius: 10px; margin-right: 1rem;">
+                                <i class="fas fa-image text-primary"></i>
+                            </div>
+                            <div class="info-content" style="flex: 1;">
+                                <label class="info-label" style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Profile Picture</label>
+                                {% if product_owner.image %}
+                                <div class="mb-2">
+                                    <img src="{{ product_owner.image.url }}" alt="Current profile picture" 
+                                         style="max-width: 100px; max-height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #6366f1;">
+                                </div>
+                                {% endif %}
+                                {{ form.image }}
+                                {% if form.image.errors %}
+                                <div class="text-danger small mt-1">{{ form.image.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Full Name -->
+                        <div class="profile-info-item mb-3">
+                            <div class="info-icon" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background-color: rgba(99, 102, 241, 0.1); border-radius: 10px; margin-right: 1rem;">
+                                <i class="fas fa-user text-primary"></i>
+                            </div>
+                            <div class="info-content" style="flex: 1;">
+                                <label class="info-label" style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Full Name</label>
+                                {{ form.full_name }}
+                                {% if form.full_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.full_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="profile-info-item mb-3">
+                            <div class="info-icon" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background-color: rgba(99, 102, 241, 0.1); border-radius: 10px; margin-right: 1rem;">
+                                <i class="fas fa-envelope text-primary"></i>
+                            </div>
+                            <div class="info-content" style="flex: 1;">
+                                <label class="info-label" style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Email</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                <div class="text-danger small mt-1">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Mobile -->
+                        <div class="profile-info-item mb-3">
+                            <div class="info-icon" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background-color: rgba(99, 102, 241, 0.1); border-radius: 10px; margin-right: 1rem;">
+                                <i class="fas fa-phone text-primary"></i>
+                            </div>
+                            <div class="info-content" style="flex: 1;">
+                                <label class="info-label" style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Mobile</label>
+                                {{ form.mobile }}
+                                {% if form.mobile.errors %}
+                                <div class="text-danger small mt-1">{{ form.mobile.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </form>
+                    
+                    <!-- View Mode -->
+                    <div id="profileViewMode">
+                        <div class="profile-info-item mb-3" style="display: flex; align-items: flex-start; padding: 1rem 0; border-bottom: 1px solid #e5e7eb;">
+                            <div class="info-icon" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background-color: rgba(99, 102, 241, 0.1); border-radius: 10px; margin-right: 1rem;">
+                                <i class="fas fa-user text-primary"></i>
+                            </div>
+                            <div class="info-content" style="flex: 1;">
+                                <label class="info-label" style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Full Name</label>
+                                <p class="info-value" style="font-size: 1rem; font-weight: 500; color: #1f2937; margin: 0;">{{product_owner.full_name}}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-info-item mb-3" style="display: flex; align-items: flex-start; padding: 1rem 0; border-bottom: 1px solid #e5e7eb;">
+                            <div class="info-icon" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background-color: rgba(99, 102, 241, 0.1); border-radius: 10px; margin-right: 1rem;">
+                                <i class="fas fa-at text-primary"></i>
+                            </div>
+                            <div class="info-content" style="flex: 1;">
+                                <label class="info-label" style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Username</label>
+                                <p class="info-value" style="font-size: 1rem; font-weight: 500; color: #1f2937; margin: 0;">{{product_owner.user.username}}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-info-item mb-3" style="display: flex; align-items: flex-start; padding: 1rem 0; border-bottom: 1px solid #e5e7eb;">
+                            <div class="info-icon" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background-color: rgba(99, 102, 241, 0.1); border-radius: 10px; margin-right: 1rem;">
+                                <i class="fas fa-envelope text-primary"></i>
+                            </div>
+                            <div class="info-content" style="flex: 1;">
+                                <label class="info-label" style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Email</label>
+                                <p class="info-value" style="font-size: 1rem; font-weight: 500; color: #1f2937; margin: 0;">{{product_owner.user.email}}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-info-item mb-3" style="display: flex; align-items: flex-start; padding: 1rem 0; border-bottom: 1px solid #e5e7eb;">
+                            <div class="info-icon" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background-color: rgba(99, 102, 241, 0.1); border-radius: 10px; margin-right: 1rem;">
+                                <i class="fas fa-phone text-primary"></i>
+                            </div>
+                            <div class="info-content" style="flex: 1;">
+                                <label class="info-label" style="display: block; font-size: 0.75rem; font-weight: 600; color: #6b7280; margin-bottom: 0.25rem;">Mobile</label>
+                                <p class="info-value" style="font-size: 1rem; font-weight: 500; color: #1f2937; margin: 0;">{{product_owner.mobile|default:"Not provided"}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products List -->
+        <div class="col-lg-8">
+            <div class="card-modern" style="border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                <div class="card-body p-4">
+                    <h3 class="mb-4">
+                        <i class="fas fa-box text-primary me-2"></i>My Products
+                    </h3>
+                    {% if products %}
+                    <div class="table-responsive">
+                        <table class="table table-modern">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Product</th>
+                                    <th>Price</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for product in products %}
+                                <tr>
+                                    <td>{{forloop.counter}}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            {% if product.image %}
+                                            <img src="{{ product.image.url }}" alt="{{ product.title }}" 
+                                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px; margin-right: 10px;">
+                                            {% endif %}
+                                            <div>
+                                                <strong>{{product.title}}</strong>
+                                                <br>
+                                                <small class="text-muted">{{product.category.title}}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><strong>RWF {{product.selling_price}}</strong></td>
+                                    <td>
+                                        <span class="badge bg-success">Active</span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'ecomapp:poproductedit' product.pk %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit me-1"></i>Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center mt-3">
+                        <a href="{% url 'ecomapp:poproductlist' %}" class="btn btn-primary">
+                            <i class="fas fa-list me-2"></i>View All Products
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-box fa-3x text-muted mb-3"></i>
+                        <h4>No Products Yet</h4>
+                        <p class="text-muted">You haven't created any products yet.</p>
+                        <a href="{% url 'ecomapp:poproductcreate' %}" class="btn btn-primary mt-3">
+                            <i class="fas fa-plus me-2"></i>Create Your First Product
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-info-item {
+        display: flex;
+        align-items: flex-start;
+        transition: background-color 0.2s ease;
+    }
+    
+    .profile-info-item:hover {
+        background-color: #f9fafb;
+        margin: 0 -1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        border-radius: 8px;
+    }
+    
+    #profileEditForm input[type="text"],
+    #profileEditForm input[type="email"],
+    #profileEditForm input[type="file"] {
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    
+    #profileEditForm input:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        outline: none;
+    }
+    
+    #profileEditForm input[type="file"] {
+        padding: 0.5rem;
+        cursor: pointer;
+    }
+    
+    .table-modern {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+    
+    .table-modern thead th {
+        background-color: #f9fafb;
+        color: #1f2937;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .table-modern tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .table-modern tbody tr:hover {
+        background-color: #f9fafb;
+    }
+</style>
+
+<script>
+function toggleEditMode() {
+    const viewMode = document.getElementById('profileViewMode');
+    const editForm = document.getElementById('profileEditForm');
+    const editBtn = document.getElementById('editProfileBtn');
+    const editActions = document.getElementById('editActions');
+    
+    if (viewMode && editForm && editBtn && editActions) {
+        if (viewMode.style.display === 'none') {
+            // Switch to view mode
+            viewMode.style.display = 'block';
+            editForm.style.display = 'none';
+            editBtn.style.display = 'block';
+            editActions.style.display = 'none';
+        } else {
+            // Switch to edit mode
+            viewMode.style.display = 'none';
+            editForm.style.display = 'block';
+            editBtn.style.display = 'none';
+            editActions.style.display = 'block';
+        }
+    }
+}
+
+function cancelEdit() {
+    // Reload page to reset form
+    window.location.reload();
+}
+
+// Show edit mode if form has errors
+{% if form.errors %}
+document.addEventListener('DOMContentLoaded', function() {
+    toggleEditMode();
+});
+{% endif %}
+</script>
+{% endblock %}

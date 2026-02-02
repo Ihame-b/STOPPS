@@ -86,6 +86,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'ecomapp.context_processors.cart_count',
+                'ecomapp.context_processors.user_permissions',
             ],
         },
     },
@@ -190,12 +191,24 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
 # Email configuration - use environment variables for production
+# Email Configuration
+# For testing: Use console backend to see emails in terminal
+# For production: Use SMTP backend with proper credentials
+
+# Using SMTP backend for real email sending
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+
+# For testing only - uncomment to print emails to console instead of sending:
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'ihamegrbt@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'gsgxechqvudhjync')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'zyxojczvbodwmnbm')
+
+# Gmail requires App Password if 2-Step Verification is enabled
+# Get App Password from: https://myaccount.google.com/apppasswords
 
 #Map
 # GOOGLE_API_KEY ="AIzaSyClE7cR8CYsxKMw-wZvVwCXDCCI4dshjVk"

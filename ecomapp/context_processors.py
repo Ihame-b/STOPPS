@@ -1,4 +1,4 @@
-from .models import Cart
+from .models import Cart, Admin, LinfoxUser
 
 def cart_count(request):
     """
@@ -21,4 +21,20 @@ def cart_count(request):
     
     return {
         'cart_item_count': cart_item_count
+    }
+
+def user_permissions(request):
+    """
+    Context processor to add user permission checks to all templates
+    """
+    is_admin_user = False
+    is_linfox_user = False
+    
+    if request.user.is_authenticated:
+        is_admin_user = Admin.objects.filter(user=request.user).exists()
+        is_linfox_user = LinfoxUser.objects.filter(user=request.user).exists()
+    
+    return {
+        'is_admin_user': is_admin_user,
+        'is_linfox_user': is_linfox_user
     }

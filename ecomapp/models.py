@@ -73,7 +73,7 @@ class ProductOwner(models.Model):
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     full_name = models.CharField(max_length=200)
-    address = models.CharField(max_length=200, null=True, blank=True)
+    image = models.ImageField(upload_to="customers", null=True, blank=True, default=None)
     joined_on = models.DateTimeField(auto_now_add=True)
     address = models.CharField(verbose_name="Address",max_length=100, null=True, blank=True, default="kk 310st")
     town = models.CharField(verbose_name="Town/City",max_length=100, null=True, blank=True, default="kigali")
@@ -152,6 +152,7 @@ class Cargo(models.Model):
         price = models.PositiveIntegerField(default=0)
         view_count = models.PositiveIntegerField(default=0)
         cargo_status = models.CharField(max_length=50, choices=CARGO_STATUS, default="Cargo Available")
+        created_by = models.ForeignKey(LinfoxUser, on_delete=models.CASCADE, null=True, blank=True, related_name='cargo_items', verbose_name="Created By")
 
   
         def __str__(self):
@@ -249,3 +250,18 @@ class Message(models.Model):
 
     def __str__(self):
         return f"Message from {self.sender.username} in {self.chat}"
+
+
+# Email Verification Token Model
+class EmailVerificationToken(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='email_verification')
+    token = models.CharField(max_length=100, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_verified = models.BooleanField(default=False)
+    
+    class Meta:
+        verbose_name = "Email Verification Token"
+        verbose_name_plural = "Email Verification Tokens"
+    
+    def __str__(self):
+        return f"Verification for {self.user.email} - {'Verified' if self.is_verified else 'Pending'}"

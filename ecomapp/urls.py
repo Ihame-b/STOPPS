@@ -34,6 +34,7 @@ urlpatterns = [
     path("login/", CustomerLoginView.as_view(), name="customerlogin"),
 
     path("profile/", CustomerProfileView.as_view(), name="customerprofile"),
+    path("profile/edit/", CustomerProfileEditView.as_view(), name="customerprofileedit"),
     path("profile/order-<int:pk>/", CustomerOrderDetailView.as_view(),
          name="customerorderdetail"),
 
@@ -42,6 +43,10 @@ urlpatterns = [
     path("forgot-password/", PasswordForgotView.as_view(), name="passworforgot"),
     path("password-reset/<email>/<token>/",
          PasswordResetView.as_view(), name="passwordreset"),
+    path("password-reset-confirm/<uidb64>/<token>/",
+         PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
+    path("verify-email/<str:token>/", VerifyEmailView.as_view(), name="verify_email"),
+    path("resend-verification/", ResendVerificationEmailView.as_view(), name="resend_verification"),
     
     # Admin Side pages
 
@@ -139,6 +144,8 @@ urlpatterns = [
 # Product Owner
     path("product-login/", productOwnerLoginView.as_view(), name="productOwnerlogin"),
     path("po-home/", productOwnerHomeView.as_view(), name="pohome"),
+    path("po-profile/", ProductOwnerProfileView.as_view(), name="productownerprofile"),
+    path("linfox-profile/", LinfoxProfileView.as_view(), name="linfoxprofile"),
     path("po-pro/list/", productOwnerListView.as_view(), name="poproductlist"),
     path("po-pro/add/",  productOwnerCreateView.as_view(), name="poproductcreate"),
     path("po-pro/edit/<int:pk>/", productOwnerUpdateView.as_view(), name="poproductedit"),

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to {{ site_name }}!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            padding: 40px;
+            border: 1px solid #e5e7eb;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #6366f1;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: #6366f1;
+            margin-bottom: 10px;
+        }
+
+        .welcome-badge {
+            display: inline-block;
+            background-color: #6366f1;
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .content {
+            background-color: #ffffff;
+            padding: 25px 0;
+        }
+
+        .welcome-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .welcome-section h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+
+        .features {
+            background-color: #f9fafb;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+
+        .features h3 {
+            color: #6366f1;
+            margin-top: 0;
+        }
+
+        .features ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .features li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .features li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 14px 35px;
+            background-color: #6366f1;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 20px 0;
+            font-weight: 600;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .button:hover {
+            background-color: #4f46e5;
+        }
+
+        .button-secondary {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: #10b981;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+
+        .button-secondary:hover {
+            background-color: #059669;
+        }
+
+        .footer {
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .link {
+            color: #6366f1;
+            word-break: break-all;
+        }
+
+        .info-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #6366f1;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">{{ site_name }}</div>
+            <div class="welcome-badge">Welcome Aboard!</div>
+        </div>
+
+        <div class="content">
+            <div class="welcome-section">
+                <h1>🎉 Welcome to {{ site_name }}!</h1>
+                <p style="font-size: 18px; margin: 0;">Hello {{ user.get_full_name|default:user.username }},</p>
+            </div>
+
+            <p>We're thrilled to have you join our platform as a <strong>{{ user_type }}</strong>! Your account has been successfully created.</p>
+
+            {% if not is_already_verified %}
+            <div class="info-box">
+                <p style="margin: 0;"><strong>📧 Email Verification Required</strong></p>
+                <p style="margin: 10px 0 0 0;">To complete your registration and start using all features, please verify your email address by clicking the button below:</p>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{ verification_url }}" class="button">Verify Email Address</a>
+            </div>
+
+            <p style="text-align: center; color: #6b7280; font-size: 14px;">Or copy and paste this link into your browser:</p>
+            <p style="text-align: center;"><a href="{{ verification_url }}" class="link" style="font-size: 12px;">{{ verification_url }}</a></p>
+            {% else %}
+            <div class="info-box" style="background-color: #d1fae5; border-left-color: #10b981;">
+                <p style="margin: 0;"><strong>✅ Your Account is Ready!</strong></p>
+                <p style="margin: 10px 0 0 0;">Your email has been verified and your account is active. You can log in immediately!</p>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{ login_url }}" class="button-secondary">Log In to Your Account</a>
+            </div>
+            {% endif %}
+
+            <div class="features">
+                <h3>What You Can Do on {{ site_name }}:</h3>
+                {% if user_type == 'Customer' %}
+                <ul>
+                    <li>Browse and purchase products from our wide selection</li>
+                    <li>Track your orders in real-time</li>
+                    <li>Manage your profile and delivery addresses</li>
+                    <li>View your order history and receipts</li>
+                    <li>Get updates on your shipments</li>
+                </ul>
+                {% elif user_type == 'Product Owner' %}
+                <ul>
+                    <li>Add and manage your products</li>
+                    <li>Track sales and inventory</li>
+                    <li>View customer orders for your products</li>
+                    <li>Update product information and images</li>
+                    <li>Monitor your business performance</li>
+                </ul>
+                {% elif user_type == 'Linfox User' %}
+                <ul>
+                    <li>Manage cargo and transport operations</li>
+                    <li>Track shipments and deliveries</li>
+                    <li>Update cargo status and information</li>
+                    <li>View transport statistics and reports</li>
+                    <li>Coordinate logistics efficiently</li>
+                </ul>
+                {% elif user_type == 'Admin' %}
+                <ul>
+                    <li>Manage all users and accounts</li>
+                    <li>Oversee products and categories</li>
+                    <li>Monitor orders and transactions</li>
+                    <li>Access comprehensive system reports</li>
+                    <li>Configure system settings</li>
+                </ul>
+                {% else %}
+                <ul>
+                    <li>Access all features available to your account type</li>
+                    <li>Manage your profile and settings</li>
+                    <li>Get support when you need it</li>
+                </ul>
+                {% endif %}
+            </div>
+
+            {% if not is_already_verified %}
+            <p style="color: #6b7280; font-size: 14px;"><strong>Note:</strong> This verification link will expire in 7 days. If you didn't create an account on {{ site_name }}, please ignore this email.</p>
+            {% endif %}
+
+            <p style="margin-top: 30px;">If you have any questions or need assistance, please don't hesitate to contact our support team.</p>
+
+            <p>Best regards,<br>
+            <strong>The {{ site_name }} Team</strong></p>
+        </div>
+
+        <div class="footer">
+            <p>© {% now "Y" %} {{ site_name }}. All rights reserved.</p>
+            <p>This is an automated email, please do not reply.</p>
+            <p style="font-size: 12px; color: #9ca3af;">You received this email because an account was created with this email address on {{ site_name }}.</p>
+        </div>
+    </div>
+</body>
+
+</html>
