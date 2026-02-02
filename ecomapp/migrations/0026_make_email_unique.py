@@ -3,6 +3,53 @@
 from django.db import migrations
 
 
+def fix_empty_and_duplicate_emails(apps, schema_editor):
+    """Fix empty and duplicate emails before adding unique constraint"""
+    User = apps.get_model('auth', 'User')
+    from django.db.models import Count, Q
+    from django.db import transaction
+    
+    with transaction.atomic():
+        # Fix NULL emails first
+        users_with_null_email = User.objects.filter(Q(email__isnull=True) | Q(email='')).order_by('id')
+        for user in users_with_null_email:
+            # Assign unique placeholder email
+            user.email = f'user_{user.id}_noemail@placeholder.local'
+            user.save(update_fields=['email'])
+        
+        # Fix duplicate emails (including empty strings)
+        # Get all emails and their counts
+        all_users = User.objects.all().order_by('id')
+        email_counts = {}
+        
+        # Count occurrences of each email
+        for user in all_users:
+            email = user.email or ''
+            if email not in email_counts:
+                email_counts[email] = []
+            email_counts[email].append(user)
+        
+        # Fix duplicates
+        for email, users_list in email_counts.items():
+            if len(users_list) > 1:
+                # Keep first user's email, change others
+                for user in users_list[1:]:
+                    # Make email unique
+                    if '@' in email and email != '':
+                        # Has @ symbol, split and add user ID
+                        parts = email.split('@')
+                        user.email = f'{parts[0]}_{user.id}@{parts[1]}'
+                    else:
+                        # Empty or invalid email
+                        user.email = f'user_{user.id}_fixed@placeholder.local'
+                    user.save(update_fields=['email'])
+
+
+def reverse_fix_emails(apps, schema_editor):
+    """Reverse operation - nothing to do"""
+    pass
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,9 +57,22 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # First, fix empty and duplicate emails
+        migrations.RunPython(fix_empty_and_duplicate_emails, reverse_fix_emails),
+        # Then, add unique constraint (with error handling if it already exists)
         migrations.RunSQL(
             # Add unique constraint to email field in auth_user table
-            sql="ALTER TABLE auth_user ADD CONSTRAINT auth_user_email_unique UNIQUE (email);",
+            sql="""
+                DO $$
+                BEGIN
+                    IF NOT EXISTS (
+                        SELECT 1 FROM pg_constraint 
+                        WHERE conname = 'auth_user_email_unique'
+                    ) THEN
+                        ALTER TABLE auth_user ADD CONSTRAINT auth_user_email_unique UNIQUE (email);
+                    END IF;
+                END $$;
+            """,
             reverse_sql="ALTER TABLE auth_user DROP CONSTRAINT IF EXISTS auth_user_email_unique;",
         ),
     ]
