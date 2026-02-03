@@ -1000,7 +1000,18 @@ class AdminLoginView(FormView):
             is_linfox = LinfoxUser.objects.filter(user=usr).exists()
             
             if is_admin:
-                # Check if email is verified
+                # Check if user has an Admin profile (profile type validation)
+                if not Admin.objects.filter(user=usr).exists():
+                    messages.error(
+                        self.request,
+                        'Invalid credentials. This account is not registered as an admin.'
+                    )
+                    return render(self.request, self.template_name, {
+                        "form": self.form_class,
+                        "error": "Invalid credentials. This account is not registered as an admin."
+                    })
+                
+                # Check if email is verified (required for all Admin users)
                 from .models import EmailVerificationToken
                 try:
                     verification = EmailVerificationToken.objects.get(user=usr)
@@ -1011,8 +1022,19 @@ class AdminLoginView(FormView):
                         )
                         return render(self.request, self.template_name, {"form": self.form_class})
                 except EmailVerificationToken.DoesNotExist:
-                    # If no verification token exists, allow login (for backward compatibility with old accounts)
-                    pass
+                    # Create verification token and mark as verified for existing Admin users (backward compatibility)
+                    # But still require email verification for security
+                    import secrets
+                    token = secrets.token_urlsafe(32)
+                    EmailVerificationToken.objects.create(
+                        user=usr,
+                        token=token,
+                        is_verified=True  # Auto-verify existing admin accounts
+                    )
+                    messages.info(
+                        self.request,
+                        'Your account has been updated. Please verify your email address for future logins.'
+                    )
                 
                 # Check if user is active
                 if not usr.is_active:
