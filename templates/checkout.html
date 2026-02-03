@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load humanize %}
 
 {% block title %}Checkout - STOPPS{% endblock %}
 
@@ -41,15 +42,39 @@
                                 {% for cp in cart.cartproduct_set.all %}
                                 <tr>
                                     <td>{{forloop.counter}}</td>
-                                    <td>{{cp.product.title}}</td>
-                                    <td>RWF {{cp.rate}}</td>
+                                    <td>
+                                        <strong>{{cp.product.title}}</strong>
+                                        {% if cp.cargo %}
+                                            <br><small class="text-muted">
+                                                <i class="fas fa-truck me-1"></i>Transport: {{cp.cargo.driverName}} 
+                                                {% if cp.cargo.price > 0 %}
+                                                    (RWF {{cp.cargo.price|intcomma}})
+                                                {% else %}
+                                                    (Free)
+                                                {% endif %}
+                                            </small>
+                                        {% endif %}
+                                    </td>
+                                    <td>RWF {{cp.rate|intcomma}}</td>
                                     <td>{{cp.quantity}}</td>
-                                    <td><strong>RWF {{cp.subtotal}}</strong></td>
+                                    <td><strong>RWF {{cp.subtotal|intcomma}}</strong></td>
                                 </tr>
                                 {% endfor %}
+                                <tr>
+                                    <td colspan="4" class="text-end"><strong>Products Subtotal:</strong></td>
+                                    <td><strong>RWF {{cart_total|intcomma}}</strong></td>
+                                </tr>
+                                {% if cargo_total > 0 %}
+                                <tr>
+                                    <td colspan="4" class="text-end">
+                                        <strong><i class="fas fa-truck me-1"></i>Transport Total:</strong>
+                                    </td>
+                                    <td><strong style="color: var(--primary-color);">RWF {{cargo_total|intcomma}}</strong></td>
+                                </tr>
+                                {% endif %}
                                 <tr class="table-active">
-                                    <td colspan="4" class="text-end"><strong>Total:</strong></td>
-                                    <td><strong class="text-primary">RWF {{cart.total}}</strong></td>
+                                    <td colspan="4" class="text-end"><strong>Grand Total:</strong></td>
+                                    <td><strong class="text-primary" style="font-size: 1.1em;">RWF {{grand_total|intcomma}}</strong></td>
                                 </tr>
                             </tbody>
                         </table>

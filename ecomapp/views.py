@@ -359,6 +359,11 @@ class UpdateCargoView(EcomMixin, View):
         except (CartProduct.DoesNotExist, Cargo.DoesNotExist):
             messages.error(request, "Invalid selection")
         
+        # Check if this is an AJAX request
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            from django.http import JsonResponse
+            return JsonResponse({'success': True, 'redirect': reverse('ecomapp:mycart')})
+        
         return redirect("ecomapp:mycart")
 
 
@@ -375,6 +380,19 @@ class EmptyCartView(EcomMixin, View):
 
 class MyCartView(EcomMixin, TemplateView):
     template_name = "mycart.html"
+
+    def dispatch(self, request, *args, **kwargs):
+        # Check if user is authenticated and is a Customer before accessing cart
+        if not request.user.is_authenticated:
+            messages.info(request, "Please log in to view your cart and proceed to checkout.")
+            return redirect(reverse("ecomapp:customerlogin") + "?next=" + reverse("ecomapp:mycart"))
+        
+        # Check if user is a Customer (not ProductOwner, Admin, or LinfoxUser)
+        if not Customer.objects.filter(user=request.user).exists():
+            messages.warning(request, "Only customers can access the shopping cart. Please log in with a customer account.")
+            return redirect(reverse("ecomapp:customerlogin") + "?next=" + reverse("ecomapp:mycart"))
+        
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -401,8 +419,10 @@ class MyCartView(EcomMixin, TemplateView):
             context['cargo_total'] = 0
             context['grand_total'] = 0
         context['cart'] = cart
-        # Get all available cargo options
-        context['available_cargo'] = Cargo.objects.filter(cargo_status="Cargo Available")
+        # Get a limited selection of available cargo options (show only 6-8 items)
+        # This prevents showing too many options in the table
+        available_cargo = Cargo.objects.filter(cargo_status="Cargo Available").order_by('-id')[:8]
+        context['available_cargo'] = available_cargo
         return context
 
 
@@ -412,10 +432,16 @@ class CheckoutView(EcomMixin, CreateView):
     success_url = reverse_lazy("ecomapp:home")
 
     def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            pass
-        else:
-            return redirect("/login/?next=/checkout/")
+        # Check if user is authenticated
+        if not request.user.is_authenticated:
+            messages.warning(request, "Please log in to proceed to checkout.")
+            return redirect(reverse("ecomapp:customerlogin") + "?next=" + reverse("ecomapp:checkout"))
+        
+        # Check if user is a Customer (not ProductOwner, Admin, or LinfoxUser)
+        if not Customer.objects.filter(user=request.user).exists():
+            messages.error(request, "Only customers can checkout. Please log in with a customer account.")
+            return redirect("ecomapp:home")
+        
         return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
@@ -423,9 +449,22 @@ class CheckoutView(EcomMixin, CreateView):
         cart_id = self.request.session.get("cart_id", None)
         if cart_id:
             cart_obj = Cart.objects.get(id=cart_id)
+            # Calculate transport total
+            cart_total = cart_obj.total
+            cargo_total = 0
+            for cp in cart_obj.cartproduct_set.all():
+                if cp.cargo and cp.cargo.price:
+                    cargo_total += cp.cargo.price * cp.quantity
+            context['cart'] = cart_obj
+            context['cart_total'] = cart_total
+            context['cargo_total'] = cargo_total
+            context['grand_total'] = cart_total + cargo_total
         else:
             cart_obj = None
-        context['cart'] = cart_obj
+            context['cart'] = cart_obj
+            context['cart_total'] = 0
+            context['cargo_total'] = 0
+            context['grand_total'] = 0
         return context
 
     def form_valid(self, form):
@@ -437,10 +476,21 @@ class CheckoutView(EcomMixin, CreateView):
                 if not cart_obj.customer:
                     cart_obj.customer = self.request.user.customer
                     cart_obj.save()
+            # Calculate product subtotal and transport (cargo) total
+            cart_total = cart_obj.total
+            cargo_total = 0
+            for cp in cart_obj.cartproduct_set.all():
+                if cp.cargo and cp.cargo.price:
+                    cargo_total += cp.cargo.price * cp.quantity
+
+            # Attach cart and totals to the order
             form.instance.cart = cart_obj
-            form.instance.subtotal = cart_obj.total
+            # Subtotal = products only
+            form.instance.subtotal = cart_total
+            # Currently no discount logic
             form.instance.discount = 0
-            form.instance.total = cart_obj.total
+            # Total = products + transport (what customer pays)
+            form.instance.total = cart_total + cargo_total
             form.instance.order_status = "Order Received"
             del self.request.session['cart_id']
             pm = form.cleaned_data.get("payment_method")
